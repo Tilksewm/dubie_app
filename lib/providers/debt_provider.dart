@@ -13,7 +13,7 @@ class DebtProvider with ChangeNotifier {
   List<Debt>? _debtsWithUser; // List of debts with a specific user
   List<Comment>? _comments;
 
-  bool _isLoadingDebt = false;
+  bool _isLoadingDebt = true;
   bool _isLoadingDebtsWithUser = false;
   bool _isLoadingComments = false;
   bool _isActionInProgress = false; // For actions like adding item, paying, etc.
@@ -46,7 +46,7 @@ class DebtProvider with ChangeNotifier {
   Future<void> fetchDebtsWithUser(String otherUserId) async {
     _isLoadingDebtsWithUser = true;
     _debtsWithUserError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       // Call the NEW backend endpoint
       _debtsWithUser = await _apiService.getDebtThreadsWithUser(otherUserId);
@@ -64,7 +64,7 @@ class DebtProvider with ChangeNotifier {
   Future<void> fetchDebtDetails(String debtId) async {
     _isLoadingDebt = true;
     _debtError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       _currentDebt = await _apiService.getDebtById(debtId);
       // Also fetch comments
@@ -82,7 +82,7 @@ class DebtProvider with ChangeNotifier {
   Future<void> fetchComments(String debtId) async {
     _isLoadingComments = true;
     _commentsError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       _comments = await _apiService.getCommentsForDebt(debtId);
       _comments!.sort((a, b) => a.date.compareTo(b.date)); // Sort comments by date
@@ -104,7 +104,7 @@ class DebtProvider with ChangeNotifier {
   }) async {
     _isActionInProgress = true;
     _actionError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       // The backend will update the debt status
       await _apiService.addDebtItem(
@@ -130,7 +130,7 @@ class DebtProvider with ChangeNotifier {
   Future<void> payDebtItem(String debtId, String itemId, double paidAmount) async {
     _isActionInProgress = true;
     _actionError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       await _apiService.payDebtItem(debtId, itemId, paidAmount);
       // After payment, refresh the debt details to get updated amounts and item status
@@ -154,7 +154,7 @@ class DebtProvider with ChangeNotifier {
     DebtItem debtItem;
     _isActionInProgress = true;
     _actionError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       await _apiService.updateDebtItem(debtId, itemId, description: description, price:price, paidAmount:paidAmount);
 
@@ -173,7 +173,7 @@ class DebtProvider with ChangeNotifier {
   Future<void> deleteDebt(String debtId) async {
     _isActionInProgress = true;
     _actionError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       await _apiService.deleteDebt(debtId);
 
@@ -191,7 +191,7 @@ class DebtProvider with ChangeNotifier {
   Future<void> deleteDebtItem(String debtId, String debtItemId) async {
     _isActionInProgress = true;
     _actionError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       await _apiService.deleteDebtItem(debtId, debtItemId);
 
@@ -210,7 +210,7 @@ class DebtProvider with ChangeNotifier {
 
     _isActionInProgress = true;
     _actionError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       await _apiService.updateDebtDescription(debtId, description);
 
@@ -229,7 +229,7 @@ class DebtProvider with ChangeNotifier {
   Future<void> addComment(String debtId, String commentText) async {
     _isActionInProgress = true;
     _actionError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       final newComment = await _apiService.addCommentToDebt(debtId, commentText);
       if (_comments != null) {
@@ -253,7 +253,7 @@ class DebtProvider with ChangeNotifier {
   Future<void> acceptDebt(String debtId) async {
     _isActionInProgress = true;
     _actionError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       await _apiService.acceptDebt(debtId);
       await fetchDebtDetails(debtId); // Refresh status

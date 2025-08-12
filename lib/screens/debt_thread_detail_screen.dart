@@ -230,33 +230,35 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                 }
                 return;
               }
+              _payDebtItem(widget.debtId, itemId, amount);
               Navigator.pop(context); // Close dialog
-              try {
-                await Provider.of<DebtProvider>(context, listen: false).payDebtItem(
-                  widget.debtId,
-                  itemId,
-                  amount,
-                );
-                _refreshDebtDetails();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Payment recorded!')),
-                  );
-                }
-
-              } on ApiException catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to record payment: ${e.message}')),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('An unexpected error occurred.')),
-                  );
-                }
-              }
+              //
+              // try {
+              //   await Provider.of<DebtProvider>(context, listen: false).payDebtItem(
+              //     widget.debtId,
+              //     itemId,
+              //     amount,
+              //   );
+              //   //_refreshDebtDetails();
+              //   if (mounted) {
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       const SnackBar(content: Text('Payment recorded!')),
+              //     );
+              //   }
+              //
+              // } on ApiException catch (e) {
+              //   if (mounted) {
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       SnackBar(content: Text('Failed to record payment: ${e.message}')),
+              //     );
+              //   }
+              // } catch (e) {
+              //   if (mounted) {
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       const SnackBar(content: Text('An unexpected error occurred.')),
+              //     );
+              //   }
+              // }
             },
             child: const Text('Pay'),
           ),

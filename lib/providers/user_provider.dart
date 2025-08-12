@@ -7,7 +7,7 @@ import '../models/user.dart';
 class UserProvider with ChangeNotifier {
   final RemoteApiService _apiService;
   User? currentUser;
-  bool _isLoading = false;
+  bool _isLoading = true;
   String? _fetchingError;
 
   bool get isLoading => _isLoading;
@@ -19,7 +19,7 @@ class UserProvider with ChangeNotifier {
   Future<void> getUserById(String userId) async {
     _isLoading = true;
     _fetchingError = null;
-    notifyListeners();
+    //notifyListeners();
     try {
       currentUser = await _apiService.getUserInfo(userId);
     } on ApiException catch (e) {
@@ -34,7 +34,7 @@ class UserProvider with ChangeNotifier {
   Future<User?> editTemporaryUser(String userId, {required String name, String? phone, String? email, String? username}) async {
     _isLoading = true;
     _fetchingError = null;
-    notifyListeners();
+    //notifyListeners();
     try{
        currentUser = await _apiService.editTemporaryUser(userId, name: name, phone: phone, email: email,username: username);
 
