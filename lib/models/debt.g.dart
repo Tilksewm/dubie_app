@@ -3,58 +3,149 @@
 part of 'debt.dart';
 
 // **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
+
+class DebtAdapter extends TypeAdapter<Debt> {
+  @override
+  final int typeId = 1;
+
+  @override
+  Debt read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Debt(
+      id: fields[0] as String,
+      creditorId: fields[2] as String,
+      borrowerId: fields[3] as String,
+      overallDescription: fields[4] as String?,
+      isVerified: fields[5] as bool,
+      status: fields[6] as String,
+      syncStatus: fields[1] as SyncStatus,
+      createdAt: fields[7] as String,
+      updatedAt: fields[8] as String,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Debt obj) {
+    writer
+      ..writeByte(9)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.syncStatus)
+      ..writeByte(2)
+      ..write(obj.creditorId)
+      ..writeByte(3)
+      ..write(obj.borrowerId)
+      ..writeByte(4)
+      ..write(obj.overallDescription)
+      ..writeByte(5)
+      ..write(obj.isVerified)
+      ..writeByte(6)
+      ..write(obj.status)
+      ..writeByte(7)
+      ..write(obj.createdAt)
+      ..writeByte(8)
+      ..write(obj.updatedAt);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DebtAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class SyncStatusAdapter extends TypeAdapter<SyncStatus> {
+  @override
+  final int typeId = 1;
+
+  @override
+  SyncStatus read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return SyncStatus.synced;
+      case 1:
+        return SyncStatus.created;
+      case 2:
+        return SyncStatus.updated;
+      case 3:
+        return SyncStatus.deleted;
+      default:
+        return SyncStatus.synced;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, SyncStatus obj) {
+    switch (obj) {
+      case SyncStatus.synced:
+        writer.writeByte(0);
+        break;
+      case SyncStatus.created:
+        writer.writeByte(1);
+        break;
+      case SyncStatus.updated:
+        writer.writeByte(2);
+        break;
+      case SyncStatus.deleted:
+        writer.writeByte(3);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SyncStatusAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+// **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-DebtItem _$DebtItemFromJson(Map<String, dynamic> json) => DebtItem(
-  id: json['item_id'] as String,
-  description: json['description'] as String,
-  price: (json['price'] as num).toDouble(),
-  paidAmount: (json['paid_amount'] as num).toDouble(),
-  isPaid: json['is_paid'] as bool,
-);
-
-Map<String, dynamic> _$DebtItemToJson(DebtItem instance) => <String, dynamic>{
-  'item_id': instance.id,
-  'description': instance.description,
-  'price': instance.price,
-  'paid_amount': instance.paidAmount,
-  'is_paid': instance.isPaid,
-};
-
 Debt _$DebtFromJson(Map<String, dynamic> json) => Debt(
-  id: json['debt_id'] as String,
-  creditorId: json['creditor_id'] as String,
-  borrowerId: json['borrower_id'] as String,
-  overallDescription: json['overall_description'] as String?,
-  isVerified: json['is_verified'] as bool,
-  status: json['status'] as String,
-  createdAt: DateTime.parse(json['created_at'] as String),
-  updatedAt: DateTime.parse(json['updated_at'] as String),
-  totalAmount: (json['total_amount'] as num?)?.toDouble(),
-  totalPaid: (json['total_paid'] as num?)?.toDouble(),
-  outstandingAmount: (json['outstanding_amount'] as num?)?.toDouble(),
-  creditorName: json['creditor_name'] as String?,
-  borrowerName: json['borrower_name'] as String?,
-  items:
-      (json['items'] as List<dynamic>?)
-          ?.map((e) => DebtItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
-);
+      id: json['id'] as String,
+      creditorId: json['creditorId'] as String,
+      borrowerId: json['borrowerId'] as String,
+      overallDescription: json['overallDescription'] as String?,
+      isVerified: json['isVerified'] as bool? ?? false,
+      status: json['status'] as String,
+      syncStatus:
+          $enumDecodeNullable(_$SyncStatusEnumMap, json['syncStatus']) ??
+              SyncStatus.synced,
+      createdAt: json['createdAt'] as String,
+      updatedAt: json['updatedAt'] as String,
+    );
 
 Map<String, dynamic> _$DebtToJson(Debt instance) => <String, dynamic>{
-  'debt_id': instance.id,
-  'creditor_id': instance.creditorId,
-  'borrower_id': instance.borrowerId,
-  'overall_description': instance.overallDescription,
-  'is_verified': instance.isVerified,
-  'status': instance.status,
-  'created_at': instance.createdAt.toIso8601String(),
-  'updated_at': instance.updatedAt.toIso8601String(),
-  'total_amount': instance.totalAmount,
-  'total_paid': instance.totalPaid,
-  'outstanding_amount': instance.outstandingAmount,
-  'creditor_name': instance.creditorName,
-  'borrower_name': instance.borrowerName,
-  'items': instance.items,
+      'id': instance.id,
+      'syncStatus': _$SyncStatusEnumMap[instance.syncStatus]!,
+      'creditorId': instance.creditorId,
+      'borrowerId': instance.borrowerId,
+      'overallDescription': instance.overallDescription,
+      'isVerified': instance.isVerified,
+      'status': instance.status,
+      'createdAt': instance.createdAt,
+      'updatedAt': instance.updatedAt,
+    };
+
+const _$SyncStatusEnumMap = {
+  SyncStatus.synced: 'synced',
+  SyncStatus.created: 'created',
+  SyncStatus.updated: 'updated',
+  SyncStatus.deleted: 'deleted',
 };

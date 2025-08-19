@@ -1,35 +1,48 @@
+import 'package:dubie_app/models/debt.dart';
+import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user.g.dart'; // This file will be generated automatically
 
+@HiveType(typeId: 0)
 @JsonSerializable()
 class User {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
+  SyncStatus syncStatus;
+  @HiveField(2)
   final String? email;
+  @HiveField(3)
   final String name;
+  @HiveField(4)
   final String? username;
+  @HiveField(5)
   final String? phone;
-  @JsonKey(name: 'user_type')
+  @HiveField(6)
   final String userType; // 'real', 'placeholder', 'temporary'
-  @JsonKey(name: 'created_at')
-  final DateTime? createdAt;
-  @JsonKey(name: 'updated_at')
-  final DateTime? updatedAt;
+  @HiveField(7)
+  final String createdAt;
+  @HiveField(8)
+  final String updatedAt;
 
   User({
     required this.id,
+    this.syncStatus = SyncStatus.synced,
     this.email,
     required this.name,
     this.username,
     this.phone,
     required this.userType,
-    this.createdAt,
-    this.updatedAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
-  Map<String, dynamic> toJson() => _$UserToJson(this);
 
+  Map<String, dynamic> toJson() => _$UserToJson(this);
+}
+/*
   User copyWith({
     String? id,
     String? email,
@@ -93,7 +106,7 @@ class HomeUser {
     );
   }
 }
-
+*/
 // import 'package:json_annotation/json_annotation.dart';
 //
 // part 'user.g.dart'; // This file will be generated automatically

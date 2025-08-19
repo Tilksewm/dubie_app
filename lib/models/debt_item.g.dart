@@ -1,36 +1,36 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user.dart';
+part of 'debt_item.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class UserAdapter extends TypeAdapter<User> {
+class DebtItemAdapter extends TypeAdapter<DebtItem> {
   @override
-  final int typeId = 0;
+  final int typeId = 2;
 
   @override
-  User read(BinaryReader reader) {
+  DebtItem read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return User(
+    return DebtItem(
       id: fields[0] as String,
+      debtId: fields[2] as String,
+      amount: fields[3] as double,
+      description: fields[4] as String,
+      paidAmount: fields[5] as double,
+      isPaid: fields[6] as bool,
       syncStatus: fields[1] as SyncStatus,
-      email: fields[2] as String?,
-      name: fields[3] as String,
-      username: fields[4] as String?,
-      phone: fields[5] as String?,
-      userType: fields[6] as String,
       createdAt: fields[7] as String,
       updatedAt: fields[8] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, User obj) {
+  void write(BinaryWriter writer, DebtItem obj) {
     writer
       ..writeByte(9)
       ..writeByte(0)
@@ -38,15 +38,15 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(1)
       ..write(obj.syncStatus)
       ..writeByte(2)
-      ..write(obj.email)
+      ..write(obj.debtId)
       ..writeByte(3)
-      ..write(obj.name)
+      ..write(obj.amount)
       ..writeByte(4)
-      ..write(obj.username)
+      ..write(obj.description)
       ..writeByte(5)
-      ..write(obj.phone)
+      ..write(obj.paidAmount)
       ..writeByte(6)
-      ..write(obj.userType)
+      ..write(obj.isPaid)
       ..writeByte(7)
       ..write(obj.createdAt)
       ..writeByte(8)
@@ -59,7 +59,7 @@ class UserAdapter extends TypeAdapter<User> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UserAdapter &&
+      other is DebtItemAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
@@ -68,28 +68,28 @@ class UserAdapter extends TypeAdapter<User> {
 // JsonSerializableGenerator
 // **************************************************************************
 
-User _$UserFromJson(Map<String, dynamic> json) => User(
+DebtItem _$DebtItemFromJson(Map<String, dynamic> json) => DebtItem(
       id: json['id'] as String,
+      debtId: json['debtId'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      description: json['description'] as String,
+      paidAmount: (json['paidAmount'] as num).toDouble(),
+      isPaid: json['isPaid'] as bool,
       syncStatus:
           $enumDecodeNullable(_$SyncStatusEnumMap, json['syncStatus']) ??
               SyncStatus.synced,
-      email: json['email'] as String?,
-      name: json['name'] as String,
-      username: json['username'] as String?,
-      phone: json['phone'] as String?,
-      userType: json['userType'] as String,
       createdAt: json['createdAt'] as String,
       updatedAt: json['updatedAt'] as String,
     );
 
-Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
+Map<String, dynamic> _$DebtItemToJson(DebtItem instance) => <String, dynamic>{
       'id': instance.id,
       'syncStatus': _$SyncStatusEnumMap[instance.syncStatus]!,
-      'email': instance.email,
-      'name': instance.name,
-      'username': instance.username,
-      'phone': instance.phone,
-      'userType': instance.userType,
+      'debtId': instance.debtId,
+      'amount': instance.amount,
+      'description': instance.description,
+      'paidAmount': instance.paidAmount,
+      'isPaid': instance.isPaid,
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,
     };

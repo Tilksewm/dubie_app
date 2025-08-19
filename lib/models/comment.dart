@@ -1,25 +1,33 @@
+import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
+
+import 'debt.dart';
 
 part 'comment.g.dart';
 
+@HiveType(typeId: 3)
 @JsonSerializable()
 class Comment {
-  @JsonKey(name: 'comment_id')
+  @HiveField(0)
   final String id;
-  @JsonKey(name: 'comment')
+  @HiveField(1)
   final String commentText;
-  @JsonKey(name: 'commenter_id')
+  @HiveField(2)
   final String commenterId;
-  @JsonKey(name: 'commenter_name')
-  final String? commenterName; // Joined from user table
-  final DateTime date; // Maps to 'created_at' in backend
+  @HiveField(4)
+  final String date; // Maps to 'created_at' in backend
+  @HiveField(5)
+  SyncStatus syncStatus;
+  @HiveField(6)
+  String debtId;
 
   Comment({
     required this.id,
     required this.commentText,
     required this.commenterId,
-    this.commenterName,
     required this.date,
+    required this.syncStatus,
+    required this.debtId
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) => _$CommentFromJson(json);
