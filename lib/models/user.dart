@@ -6,7 +6,7 @@ part 'user.g.dart'; // This file will be generated automatically
 
 @HiveType(typeId: 0)
 @JsonSerializable()
-class User {
+class User extends HiveObject {
   @HiveField(0)
   final String id;
   @HiveField(1)

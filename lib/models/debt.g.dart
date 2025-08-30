@@ -66,7 +66,7 @@ class DebtAdapter extends TypeAdapter<Debt> {
 
 class SyncStatusAdapter extends TypeAdapter<SyncStatus> {
   @override
-  final int typeId = 1;
+  final int typeId = 4;
 
   @override
   SyncStatus read(BinaryReader reader) {

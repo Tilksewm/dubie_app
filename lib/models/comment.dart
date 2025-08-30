@@ -7,25 +7,25 @@ part 'comment.g.dart';
 
 @HiveType(typeId: 3)
 @JsonSerializable()
-class Comment {
+class Comment extends HiveObject {
   @HiveField(0)
-  final String id;
+  String id;
   @HiveField(1)
-  final String commentText;
+  String commentText;
   @HiveField(2)
-  final String commenterId;
+  String commenterId;
+  @HiveField(3)
+  String createdAt; // Maps to 'created_at' in backend
   @HiveField(4)
-  final String date; // Maps to 'created_at' in backend
-  @HiveField(5)
   SyncStatus syncStatus;
-  @HiveField(6)
+  @HiveField(5)
   String debtId;
 
   Comment({
     required this.id,
     required this.commentText,
     required this.commenterId,
-    required this.date,
+    required this.createdAt,
     required this.syncStatus,
     required this.debtId
   });

@@ -7,7 +7,7 @@ part 'debt_item.g.dart';
 
 @HiveType(typeId: 2)
 @JsonSerializable()
-class DebtItem {
+class DebtItem extends HiveObject {
   @HiveField(0)
   String id;
   @HiveField(1)

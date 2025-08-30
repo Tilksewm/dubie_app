@@ -20,9 +20,9 @@ class CommentAdapter extends TypeAdapter<Comment> {
       id: fields[0] as String,
       commentText: fields[1] as String,
       commenterId: fields[2] as String,
-      date: fields[4] as String,
-      syncStatus: fields[5] as SyncStatus,
-      debtId: fields[6] as String,
+      createdAt: fields[3] as String,
+      syncStatus: fields[4] as SyncStatus,
+      debtId: fields[5] as String,
     );
   }
 
@@ -36,11 +36,11 @@ class CommentAdapter extends TypeAdapter<Comment> {
       ..write(obj.commentText)
       ..writeByte(2)
       ..write(obj.commenterId)
+      ..writeByte(3)
+      ..write(obj.createdAt)
       ..writeByte(4)
-      ..write(obj.date)
-      ..writeByte(5)
       ..write(obj.syncStatus)
-      ..writeByte(6)
+      ..writeByte(5)
       ..write(obj.debtId);
   }
 
@@ -63,7 +63,7 @@ Comment _$CommentFromJson(Map<String, dynamic> json) => Comment(
       id: json['id'] as String,
       commentText: json['commentText'] as String,
       commenterId: json['commenterId'] as String,
-      date: json['date'] as String,
+      createdAt: json['createdAt'] as String,
       syncStatus: $enumDecode(_$SyncStatusEnumMap, json['syncStatus']),
       debtId: json['debtId'] as String,
     );
@@ -72,7 +72,7 @@ Map<String, dynamic> _$CommentToJson(Comment instance) => <String, dynamic>{
       'id': instance.id,
       'commentText': instance.commentText,
       'commenterId': instance.commenterId,
-      'date': instance.date,
+      'createdAt': instance.createdAt,
       'syncStatus': _$SyncStatusEnumMap[instance.syncStatus]!,
       'debtId': instance.debtId,
     };

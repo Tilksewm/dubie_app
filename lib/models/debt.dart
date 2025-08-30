@@ -5,7 +5,7 @@ part 'debt.g.dart';
 
 @HiveType(typeId: 1)
 @JsonSerializable()
-class Debt {
+class Debt extends HiveObject {
   @HiveField(0)
   String id;
   @HiveField(1)
@@ -43,7 +43,7 @@ class Debt {
   Map<String, dynamic> toJson() => _$DebtToJson(this);
 }
 
-@HiveType(typeId: 1)
+@HiveType(typeId: 4)
 enum SyncStatus {
   @HiveField(0)
   synced,
