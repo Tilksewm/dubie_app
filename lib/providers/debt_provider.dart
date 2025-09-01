@@ -1,17 +1,51 @@
+import 'package:dubie_app/models/debt_item.dart';
+import 'package:dubie_app/services/local_db_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dubie_app/services/api_service.dart';
+//import 'package:dubie_app/services/api_service.dart';
 import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/comment.dart';
-import 'package:dubie_app/models/user.dart'; // To get current user ID
+import 'package:dubie_app/models/user.dart';
+import 'package:uuid/uuid.dart'; // To get current user ID
 
+class DebtThread{
+  final Debt debt;
+  final List<DebtItem> items;
+  final List<Comment> comments;
+  late double? outstandingAmount;
+  late double? totalAmount;
+  late double? totalPaid;
+
+
+  DebtThread({
+    required this.debt,
+    required this.items,
+    required this.comments,
+  }) {
+    if (!items.isEmpty) {
+      outstandingAmount = items.map((item) => item.amount - item.paidAmount).reduce((a, b) => (a + b));
+      totalAmount = items.map((item) => item.amount).reduce((a, b) => (a + b));
+      totalPaid = items.map((item) => item.paidAmount).reduce((a, b) => (a + b));
+    } else {
+      outstandingAmount = 0;
+      totalAmount = 0;
+      totalPaid = 0;
+    }
+  }
+}
+class _CommentWithData {
+  Comment comment;
+  String commenterName;
+  _CommentWithData({required this.comment, required this.commenterName});
+}
 class DebtProvider with ChangeNotifier {
-  final RemoteApiService _apiService;
+  //final RemoteApiService _apiService;
+  final LocalDbService _dbService;
   final SharedPreferences _prefs; // Needed to get current user ID
 
-  Debt? _currentDebt;
-  List<Debt>? _debtsWithUser; // List of debts with a specific user
-  List<Comment>? _comments;
+  DebtThread? _currentDebt;
+  List<DebtThread>? _debtsWithUser; // List of debts with a specific user
+  List<_CommentWithData>? _comments;
 
   bool _isLoadingDebt = true;
   bool _isLoadingDebtsWithUser = false;
@@ -23,12 +57,14 @@ class DebtProvider with ChangeNotifier {
   String? _commentsError;
   String? _actionError;
 
-  DebtProvider(this._prefs) : _apiService = RemoteApiService(_prefs);
+  final uuid = Uuid();
 
-  RemoteApiService get apiService => _apiService;
-  Debt? get currentDebt => _currentDebt;
-  List<Debt>? get debtsWithUser => _debtsWithUser;
-  List<Comment>? get comments => _comments;
+  DebtProvider(this._prefs) : _dbService = LocalDbService(_prefs);
+
+  LocalDbService get dbService => _dbService;
+  DebtThread? get currentDebt => _currentDebt;
+  List<DebtThread>? get debtsWithUser => _debtsWithUser;
+  List<_CommentWithData>? get comments => _comments;
 
   bool get isLoadingDebt => _isLoadingDebt;
   bool get isLoadingDebtsWithUser => _isLoadingDebtsWithUser;
@@ -41,17 +77,24 @@ class DebtProvider with ChangeNotifier {
   String? get actionError => _actionError;
 
   String? get currentUserId => _prefs.getString('user_id');
+  String generateId() => uuid.v4(); 
 
   // --- Debt List with a Specific User ---
   Future<void> fetchDebtsWithUser(String otherUserId) async {
     _isLoadingDebtsWithUser = true;
     _debtsWithUserError = null;
+    String currentUserId = _prefs.getString('user_id')!;
     //notifyListeners();
     try {
       // Call the NEW backend endpoint
-      _debtsWithUser = await _apiService.getDebtThreadsWithUser(otherUserId);
-    } on ApiException catch (e) {
-      _debtsWithUserError = e.message;
+      List<Debt> debts = await _dbService.getDebtsWithUser(currentUserId, otherUserId);
+      _debtsWithUser = await Future.wait(debts.map((debt) async {
+        return DebtThread(
+          debt: debt,
+          items: await _dbService.getDebtItems(debt.id),
+          comments: await _dbService.getComments(debt.id),
+        );
+      }));
     } catch (e) {
       _debtsWithUserError = 'Failed to load debts another_user_id = $otherUserId: $e';
     } finally {
@@ -66,11 +109,19 @@ class DebtProvider with ChangeNotifier {
     _debtError = null;
     //notifyListeners();
     try {
-      _currentDebt = await _apiService.getDebtById(debtId);
-      // Also fetch comments
-      await fetchComments(debtId);
-    } on ApiException catch (e) {
-      _debtError = e.message;
+      Debt? debt = await _dbService.getDebt(debtId);
+      if (debt != null) {
+        final items = await _dbService.getDebtItems(debt.id);
+        final comments = await _dbService.getComments(debt.id);
+        _currentDebt = DebtThread(
+          debt: debt,
+          items: items,
+          comments: comments,
+        );
+      } else {
+        _currentDebt = null;
+        _debtError = 'Debt not found';
+      }
     } catch (e) {
       _debtError = 'Failed to load debt details: $e';
     } finally {
@@ -84,12 +135,14 @@ class DebtProvider with ChangeNotifier {
     _commentsError = null;
     //notifyListeners();
     try {
-      _comments = await _apiService.getCommentsForDebt(debtId);
+      final comments = await _dbService.getComments(debtId);
+      _comments = await Future.wait(comments.map( (comment) async{
+        final commenter = await _dbService.getUser(comment.commenterId);
+        return _CommentWithData(comment: comment, commenterName: commenter!.name);
+      }));
       _comments!.sort(
-        (a, b) => a.date.compareTo(b.date),
+        (a, b) => DateTime.parse(a.comment.createdAt).compareTo(DateTime.parse(b.comment.createdAt)),
       ); // Sort comments by date
-    } on ApiException catch (e) {
-      _commentsError = e.message;
     } catch (e) {
       _commentsError = 'Failed to load comments: $e';
     } finally {
@@ -99,28 +152,15 @@ class DebtProvider with ChangeNotifier {
   }
 
   // --- Actions on Debt ---
-  Future<void> addDebtItem(
-    String debtId, {
-    required String description,
-    required double price,
-    double? paidAmount,
-  }) async {
+  Future<void> addDebtItem(DebtItem debtItem) async {
     _isActionInProgress = true;
     _actionError = null;
     //notifyListeners();
     try {
       // The backend will update the debt status
-      await _apiService.addDebtItem(
-        debtId,
-        description: description,
-        price: price,
-        paidAmount: paidAmount,
-      );
+      await _dbService.addDebtItem(debtItem);
       // Re-fetch debt details to get updated amounts and items
-      await fetchDebtDetails(debtId);
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
+      await fetchDebtDetails(debtItem.debtId);
     } catch (e) {
       _actionError = 'Failed to add item: $e';
       rethrow;
@@ -130,21 +170,14 @@ class DebtProvider with ChangeNotifier {
     }
   }
 
-  Future<void> payDebtItem(
-    String debtId,
-    String itemId,
-    double paidAmount,
-  ) async {
+  Future<void> payDebtItem(DebtItem debtItem) async {
     _isActionInProgress = true;
     _actionError = null;
     //notifyListeners();
     try {
-      await _apiService.payDebtItem(debtId, itemId, paidAmount);
+      await _dbService.updateDebtItem(debtItem);
       // After payment, refresh the debt details to get updated amounts and item status
-      await fetchDebtDetails(debtId);
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
+      await fetchDebtDetails(debtItem.debtId);
     } catch (e) {
       _actionError = 'Failed to record payment: $e';
       rethrow;
@@ -154,28 +187,13 @@ class DebtProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateDebtItem(
-    String debtId,
-    String itemId, {
-    String? description,
-    double? price,
-    double? paidAmount,
-  }) async {
-    DebtItem debtItem;
+  Future<void> updateDebtItem(DebtItem debtItem) async {
     _isActionInProgress = true;
     _actionError = null;
     //notifyListeners();
     try {
-      await _apiService.updateDebtItem(
-        debtId,
-        itemId,
-        description: description,
-        price: price,
-        paidAmount: paidAmount,
-      );
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
+      await _dbService.updateDebtItem(debtItem);
+      await fetchDebtDetails(debtItem.debtId);
     } catch (e) {
       _actionError = 'Failed to update the Debt Item: $e';
       rethrow;
@@ -186,15 +204,12 @@ class DebtProvider with ChangeNotifier {
     //return debtItem;
   }
 
-  Future<void> deleteDebt(String debtId) async {
+  Future<void> deleteDebt(DebtThread debtThread) async {
     _isActionInProgress = true;
     _actionError = null;
     //notifyListeners();
     try {
-      await _apiService.deleteDebt(debtId);
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
+      await _dbService.deleteDebt(debtThread);
     } catch (e) {
       _actionError = 'Failed to record payment: $e';
       rethrow;
@@ -204,17 +219,29 @@ class DebtProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteDebtItem(String debtId, String debtItemId) async {
+  Future<void> deleteDebtItem(DebtItem debtItem) async {
     _isActionInProgress = true;
     _actionError = null;
     //notifyListeners();
     try {
-      await _apiService.deleteDebtItem(debtId, debtItemId);
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
+      await _dbService.deleteDebtItem(debtItem);
     } catch (e) {
       _actionError = 'Failed to record payment: $e';
+      rethrow;
+    } finally {
+      _isActionInProgress = false;
+      notifyListeners();
+    }
+  }
+  Future<void> updateDebt(Debt debt) async{
+    _isActionInProgress = true;
+    _actionError = null;
+    //notifyListeners();
+    try {
+      await _dbService.updateDebt(debt);
+      await fetchDebtDetails(debt.id);
+    } catch (e) {
+      _actionError = 'Failed to update the Debt: $e';
       rethrow;
     } finally {
       _isActionInProgress = false;
@@ -222,42 +249,45 @@ class DebtProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateDebtDescription(String debtId, String description) async {
-    _isActionInProgress = true;
-    _actionError = null;
-    //notifyListeners();
-    try {
-      await _apiService.updateDebtDescription(debtId, description);
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
-    } catch (e) {
-      _actionError = 'Failed to record payment: $e';
-      rethrow;
-    } finally {
-      _isActionInProgress = false;
-      notifyListeners();
-    }
-  }
+  // Future<void> updateDebtDescription(String debtId, String description) async {
+  //   _isActionInProgress = true;
+  //   _actionError = null;
+  //   //notifyListeners();
+  //   try {
+  //     await _dbService.updateDebtDescription(debtId, description);
+  //   } on ApiException catch (e) {
+  //     _actionError = e.message;
+  //     rethrow;
+  //   } catch (e) {
+  //     _actionError = 'Failed to record payment: $e';
+  //     rethrow;
+  //   } finally {
+  //     _isActionInProgress = false;
+  //     notifyListeners();
+  //   }
+  // }
 
   Future<void> addComment(String debtId, String commentText) async {
     _isActionInProgress = true;
     _actionError = null;
     //notifyListeners();
     try {
-      final newComment = await _apiService.addCommentToDebt(
-        debtId,
-        commentText,
+      Comment comment = Comment(
+        id: generateId(),
+        commentText: commentText,
+        createdAt: DateTime.now().toIso8601String(),
+        commenterId: currentUserId!,
+        syncStatus: SyncStatus.created,
+        debtId: debtId
       );
+      await _dbService.addComment(comment);
+      User? currentUser = await _dbService.getUser(currentUserId!);
       if (_comments != null) {
-        _comments!.add(newComment);
+        _comments!.add(_CommentWithData(comment: comment, commenterName: currentUser!.name));
       } else {
-        _comments = [newComment];
+        _comments = [_CommentWithData(comment: comment, commenterName: currentUser!.name)];
       }
-      _comments!.sort((a, b) => a.date.compareTo(b.date)); // Re-sort
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
+      _comments!.sort((a, b) => DateTime.parse(a.comment.createdAt).compareTo(DateTime.parse(b.comment.createdAt))); // Re-sort
     } catch (e) {
       _actionError = 'Failed to add comment: $e';
       rethrow;
@@ -267,16 +297,13 @@ class DebtProvider with ChangeNotifier {
     }
   }
 
-  Future<void> acceptDebt(String debtId) async {
+  Future<void> acceptDebt(Debt debt) async {
     _isActionInProgress = true;
     _actionError = null;
     //notifyListeners();
     try {
-      await _apiService.acceptDebt(debtId);
-      await fetchDebtDetails(debtId); // Refresh status
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
+      await _dbService.acceptDebt(debt);
+      await fetchDebtDetails(debt.id); // Refresh status
     } catch (e) {
       _actionError = 'Failed to accept debt: $e';
       rethrow;
@@ -286,16 +313,13 @@ class DebtProvider with ChangeNotifier {
     }
   }
 
-  Future<void> rejectDebt(String debtId) async {
+  Future<void> rejectDebt(Debt debt) async {
     _isActionInProgress = true;
     _actionError = null;
     notifyListeners();
     try {
-      await _apiService.rejectDebt(debtId);
-      await fetchDebtDetails(debtId); // Refresh status
-    } on ApiException catch (e) {
-      _actionError = e.message;
-      rethrow;
+      await _dbService.rejectDebt(debt);
+      await fetchDebtDetails(debt.id); // Refresh status
     } catch (e) {
       _actionError = 'Failed to reject debt: $e';
       rethrow;

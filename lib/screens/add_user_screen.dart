@@ -27,7 +27,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
         _isLoading = true;
       });
       try {
-        final newUser = await Provider.of<HomeProvider>(context, listen: false).apiService.createPlaceholderUser(
+        final newUser = await Provider.of<HomeProvider>(context, listen: false).createPlaceholderUser(
           name: _nameController.text,
           phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
           email: _emailController.text.isNotEmpty ? _emailController.text : null,

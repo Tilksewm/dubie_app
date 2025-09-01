@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dubie_app/app_constants.dart';
 import 'package:dubie_app/models/comment.dart';
 import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/debt_item.dart';
@@ -17,6 +18,7 @@ class SyncService {
   final Box<DebtItem> _debtItemBox;
   final Box<Comment> _commentBox;
   final Box<dynamic> _metadataBox;
+  final String baseUrl = AppConstants.baseUrl;
 
   SyncService()
       : _userBox = Hive.box<User>('users'),
@@ -55,7 +57,7 @@ class SyncService {
 
       // 3. Set up the request with the JWT token
       final response = await http.post(
-        Uri.parse('YOUR_SUPABASE_EDGE_FUNCTION_URL'),
+        Uri.parse('$baseUrl/sync'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

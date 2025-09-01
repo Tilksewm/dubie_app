@@ -1,4 +1,5 @@
 // lib/providers/auth_provider.dart
+import 'package:dubie_app/services/local_db_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dubie_app/services/api_service.dart';
@@ -8,6 +9,7 @@ import 'package:dubie_app/models/user.dart';
 class AuthProvider with ChangeNotifier {
   final SharedPreferences prefs;
   late RemoteApiService _apiService;
+  late LocalDbService _dbService;
 
   bool _isAuthenticated = false;
   User? _currentUser;
@@ -23,6 +25,7 @@ class AuthProvider with ChangeNotifier {
 
   AuthProvider(this.prefs) {
     _apiService = RemoteApiService(prefs);
+    _dbService = LocalDbService(prefs);
     _loadSessionAndPinStatus();
   }
   get apiService => _apiService;
@@ -58,9 +61,9 @@ class AuthProvider with ChangeNotifier {
     if (_isAuthenticated) {
       try {
         // Fetch full user profile from the backend using the stored JWT
-        _currentUser = await _apiService.getMyProfile();
+        _currentUser = await _dbService.getUser(prefs.getString('user_id')!);
       } on ApiException catch (e) {
-        // If getMyProfile fails due to token issues, force local logout
+        // If getUser fails due to token issues, force local logout
         print("Error fetching user profile on startup: $e. Forcing logout.");
         await logout(notifyBackend: false); // Local logout
       } catch (e) {
@@ -192,7 +195,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> refreshProfileData() async {
     try {
-      _currentUser = await _apiService.getMyProfile();
+      _currentUser = await _dbService.getUser(prefs.getString('user_id')!);
       notifyListeners();
     } on ApiException catch (e) {
       print("Error refreshing profile data from API: $e. Attempting logout.");

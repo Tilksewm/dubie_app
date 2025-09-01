@@ -73,8 +73,8 @@ DebtItem _$DebtItemFromJson(Map<String, dynamic> json) => DebtItem(
       debtId: json['debtId'] as String,
       amount: (json['amount'] as num).toDouble(),
       description: json['description'] as String,
-      paidAmount: (json['paidAmount'] as num).toDouble(),
-      isPaid: json['isPaid'] as bool,
+      paidAmount: (json['paidAmount'] as num?)?.toDouble() ?? 0,
+      isPaid: json['isPaid'] as bool? ?? false,
       syncStatus:
           $enumDecodeNullable(_$SyncStatusEnumMap, json['syncStatus']) ??
               SyncStatus.synced,

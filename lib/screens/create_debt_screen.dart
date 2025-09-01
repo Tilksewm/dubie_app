@@ -1,7 +1,10 @@
+import 'package:dubie_app/models/debt.dart';
+import 'package:dubie_app/models/debt_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/debt_provider.dart';
-import 'package:dubie_app/services/api_service.dart'; // For ApiException
+import 'package:dubie_app/services/api_service.dart';
+import 'package:uuid/uuid.dart'; // For ApiException
 
 class CreateDebtScreen extends StatefulWidget {
   final String? initialBorrowerId;
@@ -72,17 +75,33 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
         _isLoading = true;
       });
       try {
+        String debtId = Uuid().v4();
         final debtProvider = Provider.of<DebtProvider>(context, listen: false);
-        final debtId = await debtProvider.apiService.createDebt(
-          borrowerInfo: {'user_id': _selectedBorrowerId, 'name': _selectedBorrowerName},
-          overallDescription: _overallDescriptionController.text.isNotEmpty
-              ? _overallDescriptionController.text
-              : null,
-          items: _debtItems,
+        Debt newDebt = Debt(
+          id: debtId,
+          creditorId: debtProvider.currentUserId!,
+          borrowerId: _selectedBorrowerId!,
+          overallDescription: _overallDescriptionController.text,
+          status: "pending",
+          createdAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
         );
+        await debtProvider.dbService.addDebt(newDebt);
+        for (var item in _debtItems) {
+          DebtItem debtItem = DebtItem(
+            id: Uuid().v4(),
+            debtId: debtId,
+            description: item['description'],
+            amount: item['price'],
+            paidAmount: 0.0,
+            createdAt: DateTime.now().toIso8601String(),
+            updatedAt: DateTime.now().toIso8601String(),
+          );
+          await debtProvider.dbService.addDebtItem(debtItem);
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Debt "$debtId" created successfully!')),
+            SnackBar(content: Text('Debt "${newDebt.id}" created successfully!')),
           );
           Navigator.of(context).pop(true); // Pop with true to indicate success
         }

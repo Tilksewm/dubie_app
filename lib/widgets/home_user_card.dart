@@ -60,7 +60,7 @@ class HomeUserCard extends StatelessWidget {
               builder: (context) => UserDebtsDetailScreen(
                 otherUserId: homeUser.userId,
                 otherUserName: homeUser.name,
-                userType: homeUser.connectionStatus,
+                userType: homeUser.type,
               ),
             ),
           );
@@ -108,7 +108,7 @@ class HomeUserCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      userStatus(homeUser.connectionStatus),
+                      userStatus(homeUser.type),
                     ],
                   ),
                 ],

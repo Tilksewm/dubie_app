@@ -85,7 +85,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     double totalBorrowAmount = 0;
     double totalCreditAmount = 0;
     for (int i = 0; i < debtProvider.debtsWithUser!.length; i++){
-      if (debtProvider.debtsWithUser?[i].borrowerId == widget.otherUserId){
+      if (debtProvider.debtsWithUser?[i].debt.borrowerId == widget.otherUserId){
         totalCreditAmount += debtProvider.debtsWithUser?[i].outstandingAmount ?? 0;
       }else{
         totalBorrowAmount += debtProvider.debtsWithUser?[i].outstandingAmount ?? 0;
@@ -171,18 +171,19 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
               itemBuilder: (context, index) {
                 if (kDebugMode) {
                   print("Rendering index $index");
-                  print(debtProvider.debtsWithUser!.map((d) => d.id).toList());
+                  print(debtProvider.debtsWithUser!.map((d) => d.debt.id).toList());
                 }
-                final debt = debtProvider.debtsWithUser![index];
+                final debtThread = debtProvider.debtsWithUser![index];
+                final debt = debtThread.debt;
                 // Determine direction from the perspective of the *current user*
                 final bool isCreditorForThisDebtThread = debt.creditorId == debtProvider.currentUserId;
                 Color amountColor = isCreditorForThisDebtThread ? Colors.green.shade700 : Colors.red.shade700;
                 String amountPrefix = isCreditorForThisDebtThread ? '+' : '-';
                 String debtAmount = '';
-                if(debt.outstandingAmount == 0){
+                if(debtThread.outstandingAmount == 0){
                   debtAmount = 'Paid';
                 }else{
-                  debtAmount = '$amountPrefix${currencyFormatter.format((debt.outstandingAmount ?? 0.0).abs())}';
+                  debtAmount = '$amountPrefix${currencyFormatter.format((debtThread.outstandingAmount ?? 0.0).abs())}';
                 }
 
                 return Card(
@@ -230,11 +231,11 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          SizedBox.fromSize(child: WrapAroundChipDisplay(items: debt.items!.map((e) => e.description).toList(),)
+                          SizedBox.fromSize(child: WrapAroundChipDisplay(items: debtThread.items.map((e) => e.description).toList(),)
                           ),
 
                           // Display items related to this debt thread
-                          if (debt.items != null && debt.items!.isNotEmpty) ...[
+                          if (debtThread.items != null && debtThread.items.isNotEmpty) ...[
                             // Text(
                             //   'Items: ${debt.items!.map((e) => e.description).join(', ')}',
                             //   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -248,7 +249,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                           ),
                           Text(
-                            'Created: ${DateFormat.yMMMd().format(debt.createdAt)}',
+                            'Created: ${DateFormat.yMMMd().format(DateTime.parse(debt.createdAt))}',
                             style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                           ),
                           // No last_comment field in original Debt model, so remove if present

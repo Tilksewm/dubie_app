@@ -1,17 +1,17 @@
+import 'dart:math';
+
+import 'package:dubie_app/models/debt.dart';
+import 'package:dubie_app/models/debt_item.dart';
+import 'package:dubie_app/providers/debt_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class EditDebtForm extends StatefulWidget {
-  final Map<String, dynamic> description;
-  // { "id": "desc1", "value": "Current description" }
-  final List<Map<String, dynamic>> items;
-  // [ { "id": "i1", "description": "...", "price": 100.0, "paidAmount": 50.0 } ]
-  final Function(Map<String, dynamic> result) onSave;
+  final DebtThread debtThread;
 
   const EditDebtForm({
     super.key,
-    required this.description,
-    required this.items,
-    required this.onSave,
+    required this.debtThread,
   });
 
   @override
@@ -26,56 +26,43 @@ class _EditDebtFormState extends State<EditDebtForm> {
   @override
   void initState() {
     super.initState();
-    _originalDesc = widget.description['value'];
+    _originalDesc = widget.debtThread.debt.overallDescription ?? "";
     _descController = TextEditingController(text: _originalDesc);
 
-    _editableItems = widget.items
-        .map((e) => _DebtItemModel(
-      id: e['id'],
-      originalDescription: e['description'],
-      originalPrice: e['price'].toString(),
-      originalPaidAmount: e['paidAmount'].toString(),
-      description: TextEditingController(text: e['description']),
-      price: TextEditingController(text: e['price'].toString()),
-      paidAmount: TextEditingController(text: e['paidAmount'].toString()),
+    _editableItems = widget.debtThread.items
+        .map((item) => _DebtItemModel(
+      id: item.id,
+      originalDescription: item.description,
+      originalPrice: item.amount.toString(),
+      originalPaidAmount: item.paidAmount.toString(),
+      description: TextEditingController(text: item.description),
+      price: TextEditingController(text: item.amount.toString()),
+      paidAmount: TextEditingController(text: item.paidAmount.toString()),
     ))
         .toList();
   }
 
-  void _handleSave() {
-    final updated = <Map<String, dynamic>>[];
-    var updatedDescription = {
-      "id": widget.description['id'],
-      "value": _descController.text,
-    };
+  Future<void> _handleSave() async {
 
     for (final item in _editableItems) {
+      final debtItem = widget.debtThread.items.firstWhere((e) => e.id == item.id);
       if (item.deleted) {
-        updated.add({
-          "id": item.id,
-          "description": "",
-          "price": 0,
-          "paidAmount": 0,
-        });
+        debtItem.updatedAt = DateTime.now().toIso8601String();
+        await Provider.of<DebtProvider>(context, listen: false).deleteDebtItem(debtItem);
+        
       } else if (item.isChanged()) {
-        updated.add({
-          "id": item.id,
-          "description": item.description.text,
-          "price": double.tryParse(item.price.text) ?? 0,
-          "paidAmount": double.tryParse(item.paidAmount.text) ?? 0,
-        });
+        debtItem.description = item.description.text;
+        debtItem.amount = double.tryParse(item.price.text) ?? 0;
+        debtItem.paidAmount = double.tryParse(item.paidAmount.text) ?? 0;
+        debtItem.updatedAt = DateTime.now().toIso8601String();
+        await Provider.of<DebtProvider>(context, listen: false).updateDebtItem(debtItem);
       }
     }
-    if(!isDescUpdated()){
-      updatedDescription["value"] = "";
+    if(isDescUpdated()){
+      final debt = widget.debtThread.debt;
+      debt.overallDescription = _descController.text;
+      await Provider.of<DebtProvider>(context, listen: false).updateDebt(debt);
     }
-
-    final result = {
-      "description": updatedDescription,
-      "items": updated,
-    };
-
-    widget.onSave(result);
     Navigator.of(context).pop();
   }
 
@@ -257,22 +244,13 @@ class _DebtItemModel {
 
 
 // Usage
-void showEditDebtForm(
-    BuildContext context, {
-      required Map<String, dynamic> description,
-      required List<Map<String, dynamic>> items,
-      required Function(Map<String, dynamic>) onSave,
-    }) {
+void showEditDebtForm (BuildContext context, DebtThread debtThread){
   showDialog(
     context: context,
     builder: (_) => SizedBox(
       width: MediaQuery.of(context).size.width * 0.9,
       height: MediaQuery.of(context).size.height * 0.7,
-      child: EditDebtForm(
-        description: description,
-        items: items,
-        onSave: onSave,
-      ),
+      child: EditDebtForm(debtThread: debtThread),
     ),
   );
 }

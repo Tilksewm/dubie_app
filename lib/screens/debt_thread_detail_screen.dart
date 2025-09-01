@@ -1,5 +1,6 @@
 import 'dart:ffi';
 
+import 'package:dubie_app/models/debt_item.dart';
 import 'package:dubie_app/screens/user_debts_detail_screen.dart';
 import 'package:dubie_app/widgets/edit_debt_form.dart';
 import 'package:flutter/material.dart';
@@ -43,51 +44,44 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       Provider.of<DebtProvider>(context, listen: false).fetchDebtDetails(widget.debtId);
     });
   }
-  void _debtOnSave (Map<String, dynamic> result) async{
-    // i will add calling the back end to update descriptions and iteratively update every changed items
-    print("Save called with: $result");
-    final description = result["description"];
-    final debts = result["items"];
-    if (description["value"] != ""){
-      //print()
-      await Provider.of<DebtProvider>(context, listen: false)
-          .updateDebtDescription(description["id"],  description["value"]);
-      print("print description value: ${description.value}");
-    }
-    for (var debtItem in debts){
-      if (debtItem["description"] != "" && debtItem["price"] != 0){
-        await Provider.of<DebtProvider>(context, listen: false).updateDebtItem(
-            widget.debtId,
-            debtItem["id"],
-            description: debtItem["description"],
-            price: debtItem["price"],
-            paidAmount: debtItem["paidAmount"]
-        );
-      }else if (debtItem["description"] == "" && debtItem["price"] == 0){
-        await Provider.of<DebtProvider>(context, listen: false).deleteDebtItem(
-          widget.debtId, debtItem["id"]
-        );
-      }
-    }
-  }
-  void _updateDebt (BuildContext context, Debt debt){
-    Map<String, dynamic> description = {"id":debt.id, "value":debt.overallDescription ?? ""};
-    List<Map<String, dynamic>> debtItems = debt.items!.map((item) => {
-      "id": item.id,
-      "description": item.description,
-      "price": item.price,
-      "paidAmount": item.paidAmount,
-    }).toList();
+  // void _debtOnSave (DebtThread debtThread) async{
+  //   // i will add calling the back end to update descriptions and iteratively update every changed items
+  //   // print("Save called with: $result");
+  //   // final description = result["description"];
+  //   // final debts = result["items"];
+  //   if (debtThread.debt.overallDescription != null){
+  //     //print()
+  //     await Provider.of<DebtProvider>(context, listen: false)
+  //         .updateDebt(debtThread.debt);
+  //     print("print description value: ${debtThread.debt.overallDescription}");
+  //   }
+  //   for (var debtItem in debtThread.items){
+  //     if (debtItem.description != "" && debtItem.amount != 0){
+  //       await Provider.of<DebtProvider>(context, listen: false).updateDebtItem(debtItem);
+  //     }else if (debtItem.description == "" && debtItem.amount == 0){
+  //       await Provider.of<DebtProvider>(context, listen: false).deleteDebtItem(debtItem);
+  //     }
+  //   }
+  // }
+  void _updateDebt (BuildContext context, DebtThread debtThread){
+    // final debt = debtThread.debt;
+    // Map<String, dynamic> description = {"id":debt.id, "value":debt.overallDescription ?? ""};
+    // List<Map<String, dynamic>> debtItems = debtThread.items.map((item) => {
+    //   "id": item.id,
+    //   "description": item.description,
+    //   "price": item.amount,
+    //   "paidAmount": item.paidAmount,
+    // }).toList();
     showDialog(
         context: context,
         builder: (_) => SizedBox(
           width: MediaQuery.of(context).size.width * 0.9,
           height: MediaQuery.of(context).size.height * 0.7,
-          child: EditDebtForm(description: description, items: debtItems, onSave: _debtOnSave),
+          child: EditDebtForm(debtThread: debtThread),
         )
     );
   }
-  Future<void> _deleteDebt(BuildContext context, String debtId) async {
+  Future<void> _deleteDebt(BuildContext context, DebtThread debtThread) async {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -105,7 +99,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               // Then log out the user and navigate to login screen
               // For now, just log out as a placeholder
               try {
-                await Provider.of<DebtProvider>(context, listen: false).deleteDebt(debtId);
+                await Provider.of<DebtProvider>(context, listen: false).deleteDebt(debtThread);
                 
                 if (mounted) {
                   Navigator.of(ctx).pop(); // Pop dialog
@@ -173,11 +167,15 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
     }
 
     try {
-      await Provider.of<DebtProvider>(context, listen: false).addDebtItem(
-        widget.debtId,
+      final provider = await Provider.of<DebtProvider>(context, listen: false);
+      provider.addDebtItem(DebtItem(
+        id: provider.generateId(),
+        debtId: widget.debtId,
         description: _itemDescriptionController.text,
-        price: price,
-      );
+        amount: price,
+        createdAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+      ));
       _itemDescriptionController.clear();
       _itemPriceController.clear();
       if (mounted) {
@@ -200,8 +198,8 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
     }
   }
 
-  Future<void> _payDebtItemForm(String itemId, double currentPaidAmount, double itemPrice) async {
-    final TextEditingController amountController = TextEditingController(text: '${itemPrice - currentPaidAmount}');
+  Future<void> _payDebtItemForm(DebtItem debtItem) async {
+    final TextEditingController amountController = TextEditingController(text: '${debtItem.amount - debtItem.paidAmount}');
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -210,7 +208,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
           controller: amountController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            labelText: 'Amount Paid (Max: ${currencyFormatter.format(itemPrice - currentPaidAmount)})',
+            labelText: 'Amount Paid (Max: ${currencyFormatter.format(debtItem.amount - debtItem.paidAmount)})',
             hintText: 'Enter amount to pay',
           ),
         ),
@@ -222,7 +220,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
           ElevatedButton(
             onPressed: () async {
               final double? amount = double.tryParse(amountController.text);
-              if (amount == null || amount <= 0 || (currentPaidAmount + amount) > itemPrice) {
+              if (amount == null || amount <= 0 || (debtItem.paidAmount + amount) > debtItem.amount) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Please enter a valid amount.')),
@@ -230,7 +228,8 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                 }
                 return;
               }
-              _payDebtItem(widget.debtId, itemId, amount);
+              debtItem.paidAmount += amount;
+              _payDebtItem(debtItem);
               Navigator.pop(context); // Close dialog
               //
               // try {
@@ -266,13 +265,9 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       ),
     );
   }
-  Future <void> _payDebtItem(String debtId, String itemId, amount) async{
+  Future <void> _payDebtItem(DebtItem debtItem) async{
     try {
-      await Provider.of<DebtProvider>(context, listen: false).payDebtItem(
-        widget.debtId,
-        itemId,
-        amount,
-      );
+      await Provider.of<DebtProvider>(context, listen: false).payDebtItem(debtItem);
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -287,18 +282,21 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       }
     }
   }
-  Future<void> _payRandomDebt(Debt debt, double totalAmount) async{
-    if (totalAmount <= debt.outstandingAmount!){
-      List<DebtItem> items = debt.items!;
+  Future<void> _payRandomDebt(DebtThread debt, double totalAmount) async{
+    final outstandingAmount = debt.items.map((item) => item.amount - item.paidAmount).reduce((a, b) => a + b);
+    if (totalAmount <= outstandingAmount){
+      List<DebtItem> items = debt.items;
       try{
         for (var item in items){
           if (totalAmount > 0){
-            var itemOutstanding = item.price - item.paidAmount;
+            var itemOutstanding = item.amount - item.paidAmount;
             if (totalAmount >= itemOutstanding){
-              _payDebtItem(debt.id, item.id, itemOutstanding);
+              item.paidAmount += itemOutstanding;
+              _payDebtItem(item);
               totalAmount -= itemOutstanding;
             }else{
-              _payDebtItem(debt.id, item.id, totalAmount);
+              item.amount += totalAmount;
+              _payDebtItem(item);
               totalAmount = 0;
               break;
             }
@@ -334,8 +332,9 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
 
     print("total payment: $totalAmount");
   }
-  Future<void> _payAllForm(Debt debt) async {
-    final TextEditingController totalPaymentController = TextEditingController(text: "${debt.outstandingAmount}");
+  Future<void> _payAllForm(DebtThread debt) async {
+    final outstandingAmount = debt.items.map((item) => item.amount - item.paidAmount).reduce((a,b) => (a+b));
+    final TextEditingController totalPaymentController = TextEditingController(text: "$outstandingAmount");
 
     await showDialog(context: context, builder: (context) =>
       AlertDialog(
@@ -344,7 +343,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               controller: totalPaymentController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: "Amount Paid (Max: ${currencyFormatter.format(debt.outstandingAmount)}",
+                labelText: "Amount Paid (Max: ${currencyFormatter.format(outstandingAmount)}",
                 hintText: "Enter Total Amount",
               )
           ),
@@ -422,7 +421,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
             if (debtProvider.isLoadingDebt && debt == null) {
               return const Text('Loading Debt...');
             }
-            final String titleText = debtProvider.currentDebt?.items?.length.toString() ?? debt?.overallDescription ?? 'Debt Details';
+            final String titleText = debtProvider.currentDebt?.items?.length.toString() ?? debt!.debt.overallDescription ?? 'Debt Details';
             final double outstanding = debt?.outstandingAmount ?? 0.0;
             final double totalAmount = debt?.totalAmount ?? 0.0;
             final double totalPaid = debt?.totalPaid ?? 0.0;
@@ -479,7 +478,8 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
             return const Center(child: Text('Debt not found.'));
           }
 
-          final debt = debtProvider.currentDebt!;
+          final debtThread = debtProvider.currentDebt!;
+          final debt = debtThread.debt;
           final bool isCreditor = debt.creditorId == debtProvider.currentUserId;
           final bool isBorrower = debt.borrowerId == debtProvider.currentUserId;
 
@@ -526,10 +526,10 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                   PopupMenuButton<String>(
                                     onSelected: (value) {
                                       if (value == 'edit') {
-                                        _updateDebt(context, debt);
+                                        _updateDebt(context, debtThread);
                                         print("Edit clicked");
                                       } else if (value == 'delete') {
-                                        _deleteDebt(context, debt.id);
+                                        _deleteDebt(context, debtThread);
                                         print("Delete clicked");
                                       }
                                     },
@@ -570,20 +570,20 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                         children: [
                           const Text('Dubie Items:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           ElevatedButton.icon(
-                              onPressed: () => _payAllForm(debt),
+                              onPressed: () => _payAllForm(debtThread),
                               icon: Icon(Icons.payments),
                             label: Text("Pay All"),
                           )
                         ],
                       ),
                       const SizedBox(height: 8),
-                      if (debt.items == null || debt.items!.isEmpty)
+                      if (debtThread.items == null || debtThread.items!.isEmpty)
                         const Text('No items in this dubie yet.', style: TextStyle(color: Colors.grey)),
-                      if (debt.items != null)
-                        ...debt.items!.map((item) {
+                      if (debtThread.items != null)
+                        ...debtThread.items.map((item) {
                           final Color itemStatusColor = item.isPaid ? Colors.green : Colors.orange;
                           final String itemStatusText = item.isPaid ? 'Paid' : 'Pending';
-                          final double remainingAmount = item.price - item.paidAmount;
+                          final double remainingAmount = item.amount - item.paidAmount;
 
                           return Card(
                             margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -592,7 +592,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Amount: ${currencyFormatter.format(item.price)}'),
+                                  Text('Amount: ${currencyFormatter.format(item.amount)}'),
                                   Text('Paid: ${currencyFormatter.format(item.paidAmount)}'),
                                   Text(
                                     '$itemStatusText ${item.isPaid ? '' : '(Remaining: ${currencyFormatter.format(remainingAmount)})'}',
@@ -605,7 +605,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                 icon: const Icon(Icons.payment, color: Colors.blue),
                                 onPressed: debtProvider.isActionInProgress
                                     ? null
-                                    : () => _payDebtItemForm(item.id, item.paidAmount, item.price),
+                                    : () => _payDebtItemForm(item),
                               )
                                   : null,
                             ),
@@ -645,8 +645,8 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                 CircleAvatar(
                                   radius: 20,
                                   backgroundColor: Colors.blueGrey,
-                                  child: Text(
-                                    comment.commenterName?.substring(0, 1).toUpperCase() ?? '?',
+                                  child: Text (
+                                    comment.commenterName.substring(0, 1).toUpperCase(),
                                     style: const TextStyle(color: Colors.white),
                                   ),
                                 ),
@@ -659,9 +659,9 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                         comment.commenterName ?? 'Anonymous',
                                         style: const TextStyle(fontWeight: FontWeight.bold),
                                       ),
-                                      Text(comment.commentText),
+                                      Text(comment.comment.commentText),
                                       Text(
-                                        DateFormat.yMMMd().add_jm().format(comment.date),
+                                        DateFormat.yMMMd().add_jm().format(DateTime.parse(comment.comment.createdAt)),
                                         style: const TextStyle(fontSize: 10, color: Colors.grey),
                                       ),
                                     ],
@@ -724,7 +724,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
         buttons.add(ElevatedButton(
           onPressed: () async {
             try {
-              await debtProvider.acceptDebt(debt.id);
+              await debtProvider.acceptDebt(debt);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Debt accepted!')),
@@ -746,7 +746,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
         buttons.add(ElevatedButton(
           onPressed: () async {
             try {
-              await debtProvider.rejectDebt(debt.id);
+              await debtProvider.rejectDebt(debt);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Debt rejected!')),

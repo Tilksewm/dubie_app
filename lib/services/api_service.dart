@@ -155,291 +155,291 @@ class RemoteApiService {
     }
   }
 
-  // --- Profile Endpoints ---
-  Future<User> getMyProfile() async {
-    final userId = prefs.getString('user_id');
-    if (userId == null) {
-      throw ApiException('User ID not found in local storage. Please log in.');
-    }
-    final url = Uri.parse('$baseUrl/auth/profile');
-    final response = await _sendRequest(
-          () => _httpClient.get(url, headers: _getHeaders()),
-    );
-    final data = _handleResponse(response);
-    return User.fromJson(data);
-  }
+  // // --- Profile Endpoints ---
+  // Future<User> getMyProfile() async {
+  //   final userId = prefs.getString('user_id');
+  //   if (userId == null) {
+  //     throw ApiException('User ID not found in local storage. Please log in.');
+  //   }
+  //   final url = Uri.parse('$baseUrl/auth/profile');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.get(url, headers: _getHeaders()),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return User.fromJson(data);
+  // }
 
-  Future<User> updateMyProfile({
-    String? name,
-    String? username,
-    String? phone,
-  }) async {
-    final userId = prefs.getString('user_id');
-    if (userId == null) {
-      throw ApiException('User ID not found in local storage.');
-    }
-    final url = Uri.parse('$baseUrl/auth/profile/$userId');
-    final Map<String, dynamic> body = {};
-    if (name != null) body['name'] = name;
-    if (username != null) body['username'] = username;
-    if (phone != null) body['phone'] = phone;
+  // Future<User> updateMyProfile({
+  //   String? name,
+  //   String? username,
+  //   String? phone,
+  // }) async {
+  //   final userId = prefs.getString('user_id');
+  //   if (userId == null) {
+  //     throw ApiException('User ID not found in local storage.');
+  //   }
+  //   final url = Uri.parse('$baseUrl/auth/profile/$userId');
+  //   final Map<String, dynamic> body = {};
+  //   if (name != null) body['name'] = name;
+  //   if (username != null) body['username'] = username;
+  //   if (phone != null) body['phone'] = phone;
 
-    final response = await _sendRequest(
-          () => _httpClient.put(
-        url,
-        headers: _getHeaders(),
-        body: json.encode(body),
-      ),
-    );
-    final data = _handleResponse(response);
-    return User.fromJson(data['user']);
-  }
+  //   final response = await _sendRequest(
+  //         () => _httpClient.put(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode(body),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return User.fromJson(data['user']);
+  // }
 
-  // --- Home Screen Endpoints ---
-  Future<Map<String, double>> getHomeSummary() async {
-    final url = Uri.parse('$baseUrl/users/home/summary');
-    final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
-    final data = _handleResponse(response);
-    return {
-      'borrow': (data['borrow'] as num).toDouble(),
-      'lent': (data['lent'] as num).toDouble(),
-    };
-  }
+  // // --- Home Screen Endpoints ---
+  // Future<Map<String, double>> getHomeSummary() async {
+  //   final url = Uri.parse('$baseUrl/users/home/summary');
+  //   final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
+  //   final data = _handleResponse(response);
+  //   return {
+  //     'borrow': (data['borrow'] as num).toDouble(),
+  //     'lent': (data['lent'] as num).toDouble(),
+  //   };
+  // }
 
-  Future<List<HomeUser>> getHomeUsers({required String filter}) async {
-    final url = Uri.parse('$baseUrl/users/home/users?filter=$filter');
-    final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
-    final List<dynamic> jsonList = _handleResponse(response);
-    return jsonList.map((json) => HomeUser.fromJson(json)).toList();
-  }
-  Future<User> getUserInfo( String userId) async{
-    final url = Uri.parse('$baseUrl/users/$userId');
-    final response = await _sendRequest(
-          () => _httpClient.get(
-        url,
-        headers: _getHeaders(),
-      ),
-    );
-    final data = _handleResponse(response);
+  // Future<List<HomeUser>> getHomeUsers({required String filter}) async {
+  //   final url = Uri.parse('$baseUrl/users/home/users?filter=$filter');
+  //   final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
+  //   final List<dynamic> jsonList = _handleResponse(response);
+  //   return jsonList.map((json) => HomeUser.fromJson(json)).toList();
+  // }
+  // Future<User> getUserInfo( String userId) async{
+  //   final url = Uri.parse('$baseUrl/users/$userId');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.get(
+  //       url,
+  //       headers: _getHeaders(),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
 
-    return User.fromJson(data);
-  }
-  Future<User> createPlaceholderUser({
-    required String name,
-    String? phone,
-    String? email,
-    String? username,
-  }) async {
-    final url = Uri.parse('$baseUrl/users/home/users');
-    final response = await _sendRequest(
-          () => _httpClient.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode({
-          'name': name,
-          'phone': phone,
-          'email': email,
-          'username': username,
-        }),
-      ),
-    );
-    final data = _handleResponse(response);
-    return User.fromJson(data['user']);
-  }
-  Future<User> editTemporaryUser(String userId, {required String name, String? phone, String? email, String? username}) async {
-    final url = Uri.parse('$baseUrl/users/home/$userId/edit');
-    final response = await _sendRequest(
-          () => _httpClient.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode({
-          'name': name,
-          'phone': phone,
-          'email': email,
-          'username': username,
-        }),
-      ),
-    );
-    final data = _handleResponse(response);
-    print(data);
-    return User.fromJson(data);
-  }
+  //   return User.fromJson(data);
+  // }
+  // Future<User> createPlaceholderUser({
+  //   required String name,
+  //   String? phone,
+  //   String? email,
+  //   String? username,
+  // }) async {
+  //   final url = Uri.parse('$baseUrl/users/home/users');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode({
+  //         'name': name,
+  //         'phone': phone,
+  //         'email': email,
+  //         'username': username,
+  //       }),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return User.fromJson(data['user']);
+  // }
+  // Future<User> editTemporaryUser(String userId, {required String name, String? phone, String? email, String? username}) async {
+  //   final url = Uri.parse('$baseUrl/users/home/$userId/edit');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode({
+  //         'name': name,
+  //         'phone': phone,
+  //         'email': email,
+  //         'username': username,
+  //       }),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   print(data);
+  //   return User.fromJson(data);
+  // }
 
-  // --- Debt Endpoints ---
-  Future<List<Debt>> getDebtThreadsWithUser(String otherUserId) async {
-    final url = Uri.parse('$baseUrl/debts/threads-with-user/$otherUserId');
-    final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
-    final List<dynamic> jsonList = _handleResponse(response);
-    return jsonList.map((json) => Debt.fromJson(json)).toList();
-  }
+  // // --- Debt Endpoints ---
+  // Future<List<Debt>> getDebtThreadsWithUser(String otherUserId) async {
+  //   final url = Uri.parse('$baseUrl/debts/threads-with-user/$otherUserId');
+  //   final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
+  //   final List<dynamic> jsonList = _handleResponse(response);
+  //   return jsonList.map((json) => Debt.fromJson(json)).toList();
+  // }
 
-  Future<String> createDebt({
-    required Map<String, dynamic> borrowerInfo,
-    String? overallDescription,
-    required List<Map<String, dynamic>> items,
-  }) async {
-    final url = Uri.parse('$baseUrl/debts');
-    final response = await _sendRequest(
-          () => _httpClient.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode({
-          'borrowerInfo': borrowerInfo,
-          'overall_description': overallDescription,
-          'items': items,
-        }),
-      ),
-    );
-    final data = _handleResponse(response);
-    return data['debt_id'];
-  }
+  // Future<String> createDebt({
+  //   required Map<String, dynamic> borrowerInfo,
+  //   String? overallDescription,
+  //   required List<Map<String, dynamic>> items,
+  // }) async {
+  //   final url = Uri.parse('$baseUrl/debts');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode({
+  //         'borrowerInfo': borrowerInfo,
+  //         'overall_description': overallDescription,
+  //         'items': items,
+  //       }),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return data['debt_id'];
+  // }
 
-  Future<Debt> getDebtById(String debtId) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId');
-    final response = await _sendRequest(
-          () => _httpClient.get(url, headers: _getHeaders()),
-    );
-    final data = _handleResponse(response);
-    return Debt.fromJson(data);
-  }
-  Future<void> deleteDebt(String debtId) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId');
-    final response = await _sendRequest(
-          () => _httpClient.delete(
-        url,
-        headers: _getHeaders(),
-      ),
-    );
-    final data = _handleResponse(response);
-    if (kDebugMode) {
-      print(data);
-    }
-  }
-  Future<Debt> updateDebtDescription(String debtId, String description) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/update-description');
-    final response = await _sendRequest(
-          () => _httpClient.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode({'description': description}),
-      ),
-    );
-    final data = _handleResponse(response);
-    return Debt.fromJson(data['debt']);
-  }
+  // Future<Debt> getDebtById(String debtId) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.get(url, headers: _getHeaders()),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return Debt.fromJson(data);
+  // }
+  // Future<void> deleteDebt(String debtId) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.delete(
+  //       url,
+  //       headers: _getHeaders(),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   if (kDebugMode) {
+  //     print(data);
+  //   }
+  // }
+  // Future<Debt> updateDebtDescription(String debtId, String description) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/update-description');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode({'description': description}),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return Debt.fromJson(data['debt']);
+  // }
 
-  Future<DebtItem> addDebtItem(String debtId, {
-    required String description,
-    required double price,
-    double? paidAmount,
-  }) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/items');
-    final response = await _sendRequest(
-          () => _httpClient.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode({
-          'description': description,
-          'price': price,
-          'paid_amount': paidAmount,
-        }),
-      ),
-    );
-    final data = _handleResponse(response);
-    return DebtItem.fromJson(data['item']);
-  }
+  // Future<DebtItem> addDebtItem(String debtId, {
+  //   required String description,
+  //   required double price,
+  //   double? paidAmount,
+  // }) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/items');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode({
+  //         'description': description,
+  //         'price': price,
+  //         'paid_amount': paidAmount,
+  //       }),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return DebtItem.fromJson(data['item']);
+  // }
 
-  Future<void> updateDebtItem(String debtId, String itemId, {
-    String? description,
-    double? price,
-    double? paidAmount,
-  }) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/items/$itemId/edit');
-    final response = await _sendRequest(
-          () => _httpClient.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode({
-          'description': description,
-          'price': price,
-          'paid_amount': paidAmount,
-        }),
-      ),
-    );
-    final data = _handleResponse(response);
-    //return DebtItem.fromJson(data['item']);
-  }
-  Future<void> deleteDebtItem(String debtId, String debtItemId) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/items/$debtItemId');
-    final response = await _sendRequest(
-          () => _httpClient.delete(
-        url,
-        headers: _getHeaders(),
+  // Future<void> updateDebtItem(String debtId, String itemId, {
+  //   String? description,
+  //   double? price,
+  //   double? paidAmount,
+  // }) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/items/$itemId/edit');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode({
+  //         'description': description,
+  //         'price': price,
+  //         'paid_amount': paidAmount,
+  //       }),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   //return DebtItem.fromJson(data['item']);
+  // }
+  // Future<void> deleteDebtItem(String debtId, String debtItemId) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/items/$debtItemId');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.delete(
+  //       url,
+  //       headers: _getHeaders(),
 
-        //   'description': description,
-        //   'price': price,
-        //   'paid_amount': paidAmount,
-      ),
-    );
-    final data = _handleResponse(response);
-    if (kDebugMode) {
-      print(data);
-    }
-  }
-  Future<DebtItem> payDebtItem(String debtId, String itemId, double paidAmount) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/pay');
-    final response = await _sendRequest(
-          () => _httpClient.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode({
-          'item_id': itemId,
-          'paid_amount': paidAmount,
-        }),
-      ),
-    );
-    final data = _handleResponse(response);
-    return DebtItem.fromJson(data['item']);
-  }
+  //       //   'description': description,
+  //       //   'price': price,
+  //       //   'paid_amount': paidAmount,
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   if (kDebugMode) {
+  //     print(data);
+  //   }
+  // }
+  // Future<DebtItem> payDebtItem(String debtId, String itemId, double paidAmount) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/pay');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode({
+  //         'item_id': itemId,
+  //         'paid_amount': paidAmount,
+  //       }),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return DebtItem.fromJson(data['item']);
+  // }
 
-  Future<Debt> acceptDebt(String debtId) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/accept');
-    final response = await _sendRequest(
-          () => _httpClient.post(url, headers: _getHeaders()),
-    );
-    final data = _handleResponse(response);
-    return Debt.fromJson(data['debt']);
-  }
+  // Future<Debt> acceptDebt(String debtId) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/accept');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(url, headers: _getHeaders()),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return Debt.fromJson(data['debt']);
+  // }
 
-  Future<Debt> rejectDebt(String debtId) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/reject');
-    final response = await _sendRequest(
-          () => _httpClient.post(url, headers: _getHeaders()),
-    );
-    final data = _handleResponse(response);
-    return Debt.fromJson(data['debt']);
-  }
+  // Future<Debt> rejectDebt(String debtId) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/reject');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(url, headers: _getHeaders()),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return Debt.fromJson(data['debt']);
+  // }
 
-  // --- Comments Endpoints ---
-  Future<List<Comment>> getCommentsForDebt(String debtId) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/comments');
-    final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
-    final List<dynamic> jsonList = _handleResponse(response);
-    return jsonList.map((json) => Comment.fromJson(json)).toList();
-  }
+  // // --- Comments Endpoints ---
+  // Future<List<Comment>> getCommentsForDebt(String debtId) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/comments');
+  //   final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
+  //   final List<dynamic> jsonList = _handleResponse(response);
+  //   return jsonList.map((json) => Comment.fromJson(json)).toList();
+  // }
 
-  Future<Comment> addCommentToDebt(String debtId, String commentText) async {
-    final url = Uri.parse('$baseUrl/debts/$debtId/comments');
-    final response = await _sendRequest(
-          () => _httpClient.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode({'comment': commentText}),
-      ),
-    );
-    final data = _handleResponse(response);
-    return Comment.fromJson(data);
-  }
+  // Future<Comment> addCommentToDebt(String debtId, String commentText) async {
+  //   final url = Uri.parse('$baseUrl/debts/$debtId/comments');
+  //   final response = await _sendRequest(
+  //         () => _httpClient.post(
+  //       url,
+  //       headers: _getHeaders(),
+  //       body: json.encode({'comment': commentText}),
+  //     ),
+  //   );
+  //   final data = _handleResponse(response);
+  //   return Comment.fromJson(data);
+  // }
 
   // --- Helper for handling API responses ---
   dynamic _handleResponse(http.Response response) {

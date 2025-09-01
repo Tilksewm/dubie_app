@@ -8,23 +8,23 @@ part 'user.g.dart'; // This file will be generated automatically
 @JsonSerializable()
 class User extends HiveObject {
   @HiveField(0)
-  final String id;
+  String id;
   @HiveField(1)
   SyncStatus syncStatus;
   @HiveField(2)
-  final String? email;
+  String? email;
   @HiveField(3)
-  final String name;
+  String name;
   @HiveField(4)
-  final String? username;
+  String? username;
   @HiveField(5)
-  final String? phone;
+  String? phone;
   @HiveField(6)
-  final String userType; // 'real', 'placeholder', 'temporary'
+  String userType; // 'real', 'placeholder', 'temporary'
   @HiveField(7)
-  final String createdAt;
+  String createdAt;
   @HiveField(8)
-  final String updatedAt;
+  String updatedAt;
 
   User({
     required this.id,
@@ -41,6 +41,21 @@ class User extends HiveObject {
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
+}
+class HomeUser {
+  final String userId;
+  final String? name;
+  final double totalAmount;
+  final String type;
+  final List<String> recentItems;
+
+  HomeUser({
+    required this.userId,
+    this.name,
+    required this.totalAmount,
+    required this.type,
+    required this.recentItems,
+  });
 }
 /*
   User copyWith({

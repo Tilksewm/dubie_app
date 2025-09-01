@@ -1,3 +1,4 @@
+import 'package:dubie_app/services/local_db_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Needed for RemoteApiService
 import 'package:dubie_app/services/api_service.dart';
@@ -5,6 +6,7 @@ import 'package:dubie_app/models/user.dart'; // For HomeUser model
 
 class HomeProvider with ChangeNotifier {
   final RemoteApiService _apiService;
+  final LocalDbService _dbService;
 
   Map<String, double>? _homeSummary;
   List<HomeUser>? _creditors; // Users current user owes to
@@ -23,7 +25,7 @@ class HomeProvider with ChangeNotifier {
   String? _userTypeError;
 
 
-  HomeProvider(SharedPreferences prefs) : _apiService = RemoteApiService(prefs);
+  HomeProvider(SharedPreferences prefs) : _apiService = RemoteApiService(prefs), _dbService = LocalDbService(prefs);
 
   Map<String, double>? get homeSummary => _homeSummary;
   List<HomeUser>? get creditors => _creditors;
@@ -46,7 +48,7 @@ class HomeProvider with ChangeNotifier {
     _summaryError = null;
     //notifyListeners();
     try {
-      _homeSummary = await _apiService.getHomeSummary();
+      _homeSummary = await _dbService.getHomeSummary();
     } on ApiException catch (e) {
       _summaryError = e.message;
     } catch (e) {
@@ -78,7 +80,7 @@ class HomeProvider with ChangeNotifier {
     _creditorsError = null;
     // notifyListeners();
     try {
-      _creditors = await _apiService.getHomeUsers(filter: 'creditors');
+      _creditors = await _dbService.getHomeUsers(filter: 'creditors');
     } on ApiException catch (e) {
       _creditorsError = e.message;
     } catch (e) {
@@ -94,7 +96,7 @@ class HomeProvider with ChangeNotifier {
     _borrowersError = null;
     //notifyListeners();
     try {
-      _borrowers = await _apiService.getHomeUsers(filter: 'borrowers');
+      _borrowers = await _dbService.getHomeUsers(filter: 'borrowers');
     } on ApiException catch (e) {
       _borrowersError = e.message;
     } catch (e) {
@@ -112,5 +114,9 @@ class HomeProvider with ChangeNotifier {
       fetchCreditors(),
       fetchBorrowers(),
     ]);
+  }
+
+  Future createPlaceholderUser({required String name, String? phone, String? email, String? username}) async {
+    return await _dbService.createPlaceholderUser(name: name, phone: phone, email: email, username: username);
   }
 }
