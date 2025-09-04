@@ -22,7 +22,7 @@ class DebtThread{
     required this.items,
     required this.comments,
   }) {
-    if (!items.isEmpty) {
+    if (items.isNotEmpty) {
       outstandingAmount = items.map((item) => item.amount - item.paidAmount).reduce((a, b) => (a + b));
       totalAmount = items.map((item) => item.amount).reduce((a, b) => (a + b));
       totalPaid = items.map((item) => item.paidAmount).reduce((a, b) => (a + b));
@@ -33,10 +33,10 @@ class DebtThread{
     }
   }
 }
-class _CommentWithData {
+class CommentWithData {
   Comment comment;
   String commenterName;
-  _CommentWithData({required this.comment, required this.commenterName});
+  CommentWithData({required this.comment, required this.commenterName});
 }
 class DebtProvider with ChangeNotifier {
   //final RemoteApiService _apiService;
@@ -45,7 +45,7 @@ class DebtProvider with ChangeNotifier {
 
   DebtThread? _currentDebt;
   List<DebtThread>? _debtsWithUser; // List of debts with a specific user
-  List<_CommentWithData>? _comments;
+  List<CommentWithData>? _comments;
 
   bool _isLoadingDebt = true;
   bool _isLoadingDebtsWithUser = false;
@@ -64,7 +64,7 @@ class DebtProvider with ChangeNotifier {
   LocalDbService get dbService => _dbService;
   DebtThread? get currentDebt => _currentDebt;
   List<DebtThread>? get debtsWithUser => _debtsWithUser;
-  List<_CommentWithData>? get comments => _comments;
+  List<CommentWithData>? get comments => _comments;
 
   bool get isLoadingDebt => _isLoadingDebt;
   bool get isLoadingDebtsWithUser => _isLoadingDebtsWithUser;
@@ -137,8 +137,8 @@ class DebtProvider with ChangeNotifier {
     try {
       final comments = await _dbService.getComments(debtId);
       _comments = await Future.wait(comments.map( (comment) async{
-        final commenter = await _dbService.getUser(comment.commenterId);
-        return _CommentWithData(comment: comment, commenterName: commenter!.name);
+        final commenter = await _dbService.getUser(comment.userId);
+        return CommentWithData(comment: comment, commenterName: commenter!.name);
       }));
       _comments!.sort(
         (a, b) => DateTime.parse(a.comment.createdAt).compareTo(DateTime.parse(b.comment.createdAt)),
@@ -276,16 +276,16 @@ class DebtProvider with ChangeNotifier {
         id: generateId(),
         commentText: commentText,
         createdAt: DateTime.now().toIso8601String(),
-        commenterId: currentUserId!,
+        userId: currentUserId!,
         syncStatus: SyncStatus.created,
         debtId: debtId
       );
       await _dbService.addComment(comment);
       User? currentUser = await _dbService.getUser(currentUserId!);
       if (_comments != null) {
-        _comments!.add(_CommentWithData(comment: comment, commenterName: currentUser!.name));
+        _comments!.add(CommentWithData(comment: comment, commenterName: currentUser!.name));
       } else {
-        _comments = [_CommentWithData(comment: comment, commenterName: currentUser!.name)];
+        _comments = [CommentWithData(comment: comment, commenterName: currentUser!.name)];
       }
       _comments!.sort((a, b) => DateTime.parse(a.comment.createdAt).compareTo(DateTime.parse(b.comment.createdAt))); // Re-sort
     } catch (e) {

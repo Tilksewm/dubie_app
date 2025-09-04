@@ -116,7 +116,11 @@ class HomeProvider with ChangeNotifier {
     ]);
   }
 
-  Future createPlaceholderUser({required String name, String? phone, String? email, String? username}) async {
-    return await _dbService.createPlaceholderUser(name: name, phone: phone, email: email, username: username);
+  Future<User> createPlaceholderUser({required String name, String? phone, String? email, String? username}) async {
+    print('on home provider starting');
+    User user = await _dbService.createPlaceholderUser(name: name, phone: phone, email: email, username: username);
+    print('on home provider end with user $user');
+    return user;
   }
+  
 }

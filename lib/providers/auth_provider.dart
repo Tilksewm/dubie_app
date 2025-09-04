@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dubie_app/services/api_service.dart';
 import 'package:dubie_app/utils/pin_storage.dart';
 import 'package:dubie_app/models/user.dart';
-
+import 'package:uuid/uuid.dart';
+// TODO: make signin and signup optional
+// TODO: generate the user_id even if the user didn't registered
 class AuthProvider with ChangeNotifier {
   final SharedPreferences prefs;
   late RemoteApiService _apiService;
@@ -209,6 +211,26 @@ class AuthProvider with ChangeNotifier {
   // Method to update user data locally after a successful profile update API call
   void updateCurrentUser(User updatedUser) {
     _currentUser = updatedUser;
+    notifyListeners();
+  }
+
+  Future<void> startWithNoAuth() async {
+    if(prefs.getString('user_id') == null){
+      final newUserId = Uuid().v4();
+      prefs.setString('user_id', newUserId);
+      await _dbService.addUser(User(
+        id: newUserId,
+        email: null,
+        name: 'Unknown',
+        phone: null,
+        username: null,
+        userType: 'temporary',
+        createdAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String()
+      ));
+    }
+    final newUserId = prefs.getString('user_id')!;
+    _currentUser = await _dbService.getUser(newUserId);
     notifyListeners();
   }
 }

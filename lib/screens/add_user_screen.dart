@@ -27,12 +27,14 @@ class _AddUserScreenState extends State<AddUserScreen> {
         _isLoading = true;
       });
       try {
+        print('Adding person: ${_nameController.text}, Phone: ${_phoneController.text}, Email: ${_emailController.text}, Username: ${_usernameController.text}');
         final newUser = await Provider.of<HomeProvider>(context, listen: false).createPlaceholderUser(
           name: _nameController.text,
           phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
           email: _emailController.text.isNotEmpty ? _emailController.text : null,
           username: _usernameController.text.isNotEmpty ? _usernameController.text : null,
         );
+        print('New user created with ID: ${newUser.id}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Person added successfully!')),
@@ -46,12 +48,6 @@ class _AddUserScreenState extends State<AddUserScreen> {
                 //totalAmountWithUser: 0.0, // Initial debt is 0.0 with a new user
               ),
             ),
-          );
-        }
-      } on ApiException catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add person: ${e.message}')),
           );
         }
       } catch (e) {

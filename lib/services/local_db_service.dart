@@ -12,16 +12,7 @@ import '../models/comment.dart';
 class LocalDbService {
   final SharedPreferences prefs;
   LocalDbService(this.prefs);
-  Future<void> initialize() async {
-    await Hive.initFlutter();
-    Hive.registerAdapter(DebtAdapter()); // Register the generated adapter
-    Hive.registerAdapter(UserAdapter());
-    Hive.registerAdapter(DebtItemAdapter());
-    Hive.registerAdapter(CommentAdapter());
-    // ... register adapters for other models
-    // Hive.registerAdapter(SyncStatusAdapter());
-  }
-
+  // Hive Boxes
   Future<Box<Debt>> get debtBox async => Hive.openBox<Debt>('debts');
   Future<Box<User>> get userBox async => Hive.openBox<User>('users');
   Future<Box<DebtItem>> get debtItemBox async => Hive.openBox<DebtItem>('debt_items');
@@ -128,8 +119,20 @@ class LocalDbService {
 
   Future<void> deleteUser(User user) async {
     final box = await userBox;
+    final dBox = await debtBox;
+    final dItemBox = await debtItemBox;
     user.syncStatus = SyncStatus.deleted;
     await box.put(user.id, user);
+    final debts = dBox.values.where((debt) => debt.creditorId == user.id).toList();
+    for (var debt in debts) {
+      debt.syncStatus = SyncStatus.deleted;
+      await dBox.put(debt.id, debt);
+      
+      final debtItems = dItemBox.values.where((debtItem) => debtItem.debtId == debt.id).toList();
+      for (var debtItem in debtItems) {
+        deleteDebtItem(debtItem);
+      }
+    }
   }
 
   Future<void> acceptDebt(Debt debt) async {
@@ -202,7 +205,7 @@ class LocalDbService {
             for (var item in items) {
               totalAmount += (item.amount - item.paidAmount);
               if (recentItems.length < 3) {
-                recentItems.add(item.description ?? 'No description');
+                recentItems.add(item.description);
               }
             }
           }
@@ -241,7 +244,7 @@ class LocalDbService {
             for (var item in items) {
               totalAmount += (item.amount - item.paidAmount);
               if (recentItems.length < 3) {
-                recentItems.add(item.description ?? 'No description');
+                recentItems.add(item.description);
               }
             }
           }
@@ -275,7 +278,8 @@ class LocalDbService {
     return null;
   }
 
-  Future<void> createPlaceholderUser({required String name, String? phone, String? email, String? username}) async {
+  Future<User> createPlaceholderUser({required String name, String? phone, String? email, String? username}) async {
+    print('Creating placeholder user with name: $name, phone: $phone, email: $email, username: $username');
     final box = await userBox;
     String userId = Uuid().v4();
     User user = User(
@@ -285,9 +289,13 @@ class LocalDbService {
       username: username,
       phone: phone,
       userType: 'placeholder',
-      createdAt: DateTime.now().toString(),
-      updatedAt: DateTime.now().toString(),
+      createdAt: DateTime.now().toIso8601String(),
+      updatedAt: DateTime.now().toIso8601String(),
     );
+    user.syncStatus = SyncStatus.created;
+    print('Creating placeholder user: $user');
     await box.put(user.id, user);
+    print('Placeholder user created with ID: ${user.id}');
+    return user;
   }
 }

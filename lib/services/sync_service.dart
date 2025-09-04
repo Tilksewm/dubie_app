@@ -112,7 +112,7 @@ class SyncService {
     await _handleRemoteDeletions(serverDeletions['comments'], _commentBox);
 
     // 5. Update local items' sync status to 'synced'
-    _updateLocalSyncStatus(data['updatedLocalItems']);
+    // _updateLocalSyncStatus(data['updatedLocalItems']);
   }
 
   Future<void> _handleRemoteUpdates(List? items, Box box) async {
@@ -209,8 +209,8 @@ class SyncService {
         }
       }
       for (var comment in _commentBox.values) {
-        if (comment.commenterId == oldId) {
-          comment.commenterId = newId;
+        if (comment.userId == oldId) {
+          comment.userId = newId;
           await comment.save();
         }
       }

@@ -13,7 +13,7 @@ class Comment extends HiveObject {
   @HiveField(1)
   String commentText;
   @HiveField(2)
-  String commenterId;
+  String userId;
   @HiveField(3)
   String createdAt; // Maps to 'created_at' in backend
   @HiveField(4)
@@ -24,7 +24,7 @@ class Comment extends HiveObject {
   Comment({
     required this.id,
     required this.commentText,
-    required this.commenterId,
+    required this.userId,
     required this.createdAt,
     required this.syncStatus,
     required this.debtId

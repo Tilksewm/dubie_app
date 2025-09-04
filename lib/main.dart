@@ -1,8 +1,15 @@
 // lib/main.dart
+import 'package:dubie_app/models/comment.dart';
+import 'package:dubie_app/models/debt.dart';
+import 'package:dubie_app/models/debt_item.dart';
+import 'package:dubie_app/models/user.dart';
 import 'package:dubie_app/providers/user_provider.dart';
 import 'package:dubie_app/screens/auth/login_screen.dart';
 import 'package:dubie_app/screens/auth/signup_screen.dart';
+import 'package:dubie_app/services/local_db_service.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,7 +23,16 @@ import 'package:dubie_app/utils/pin_storage.dart'; // Import PinStorage
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Hive once
+  await Hive.initFlutter();
+  Hive.registerAdapter(SyncStatusAdapter());
+  Hive.registerAdapter(DebtAdapter());
+  Hive.registerAdapter(UserAdapter());
+  Hive.registerAdapter(DebtItemAdapter());
+  Hive.registerAdapter(CommentAdapter());
+
   final prefs = await SharedPreferences.getInstance();
+  final dbService = LocalDbService(prefs);
   runApp(MyApp(prefs: prefs));
 }
 
@@ -51,14 +67,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.paused) {
       // App is going to background
-      if (_authProvider.isAuthenticated && _authProvider.isPinEnabled) {
+      if (_authProvider.isPinEnabled) {
         setState(() {
           _isAppLocked = true; // Mark app as locked
         });
       }
     } else if (state == AppLifecycleState.resumed) {
       // App is coming to foreground
-      if (_isAppLocked && _authProvider.isAuthenticated && _authProvider.isPinEnabled) {
+      if (_isAppLocked && _authProvider.isPinEnabled) {
         // Show PIN screen if it was locked and PIN is enabled
         // Use a slight delay to ensure UI is ready
         Future.delayed(const Duration(milliseconds: 100), () {
@@ -120,8 +136,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 body: Center(child: CircularProgressIndicator()),
               );
             }
+            if (!auth.isAuthenticated) {
+              auth.startWithNoAuth();
+            }
 
-            if (auth.isAuthenticated) {
               if (auth.isPinEnabled) {
                 // Always show PIN on startup
                 return PinLockScreen(
@@ -135,9 +153,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               } else {
                 return const HomeScreen();
               }
-            } else {
-              return const LoginScreen();
-            }
+            
           },
         ),
 

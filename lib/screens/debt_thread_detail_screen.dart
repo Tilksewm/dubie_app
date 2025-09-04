@@ -1,7 +1,7 @@
-import 'dart:ffi';
+// import 'dart:ffi';
 
 import 'package:dubie_app/models/debt_item.dart';
-import 'package:dubie_app/screens/user_debts_detail_screen.dart';
+// import 'package:dubie_app/screens/user_debts_detail_screen.dart';
 import 'package:dubie_app/widgets/edit_debt_form.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -417,14 +417,15 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       appBar: AppBar(
         title: Consumer<DebtProvider>(
           builder: (context, debtProvider, child) {
-            final debt = debtProvider.currentDebt;
+            final debtThread = debtProvider.currentDebt;
+            final debt = debtThread?.debt;
             if (debtProvider.isLoadingDebt && debt == null) {
               return const Text('Loading Debt...');
             }
-            final String titleText = debtProvider.currentDebt?.items?.length.toString() ?? debt!.debt.overallDescription ?? 'Debt Details';
-            final double outstanding = debt?.outstandingAmount ?? 0.0;
-            final double totalAmount = debt?.totalAmount ?? 0.0;
-            final double totalPaid = debt?.totalPaid ?? 0.0;
+            final String titleText = debtThread?.items.length.toString() ?? debt!.overallDescription ?? 'Debt Details';
+            final double outstanding = debtThread?.outstandingAmount ?? 0.0;
+            final double totalAmount = debtThread?.totalAmount ?? 0.0;
+            final double totalPaid = debtThread?.totalPaid ?? 0.0;
             final Color amountColor = outstanding >= 0 ? Colors.green.shade700 : Colors.red.shade700;
             final String amountPrefix = outstanding >= 0 ? '+' : ''; // No '-' for positive numbers
 
@@ -468,20 +469,27 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       ),
       body: Consumer<DebtProvider>(
         builder: (context, debtProvider, child) {
+          print('debt provider 1');
           if (debtProvider.isLoadingDebt && debtProvider.currentDebt == null) {
+             print('debt provider 2 null');
             return const Center(child: CircularProgressIndicator());
           }
           if (debtProvider.debtError != null) {
+            print('debt provider 3 !null');
             return Center(child: Text('Error: ${debtProvider.debtError}'));
           }
+          print('debt provider 4 ${debtProvider.currentDebt}');
           if (debtProvider.currentDebt == null) {
+            print('debt provider 5 null');
             return const Center(child: Text('Debt not found.'));
           }
+          print('debt provider 6 ');
 
           final debtThread = debtProvider.currentDebt!;
           final debt = debtThread.debt;
           final bool isCreditor = debt.creditorId == debtProvider.currentUserId;
           final bool isBorrower = debt.borrowerId == debtProvider.currentUserId;
+          print('debt provider 7 ');
 
           return RefreshIndicator(
             onRefresh: _refreshDebtDetails,
@@ -577,7 +585,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      if (debtThread.items == null || debtThread.items!.isEmpty)
+                      if (debtThread.items == null || debtThread.items.isEmpty)
                         const Text('No items in this dubie yet.', style: TextStyle(color: Colors.grey)),
                       if (debtThread.items != null)
                         ...debtThread.items.map((item) {

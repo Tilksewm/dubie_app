@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 
 class UserProvider with ChangeNotifier {
-  final RemoteApiService _apiService;
   final LocalDbService _dbService;
   User? currentUser;
   bool _isLoading = true;
@@ -16,7 +15,7 @@ class UserProvider with ChangeNotifier {
 
   String? get fetchingError => _fetchingError;
 
-  UserProvider(SharedPreferences prefs) : _apiService = RemoteApiService(prefs), _dbService = LocalDbService(prefs);
+  UserProvider(SharedPreferences prefs) : _dbService = LocalDbService(prefs);
 
   Future<void> getUserById(String userId) async {
     _isLoading = true;
