@@ -108,7 +108,8 @@ class LocalDbService {
 
   Future<User?> getUser(String userId) async {
     final box = await userBox;
-    return box.get(userId);
+    final user = box.get(userId);
+    return user;
   }
 
   Future<void> updateUser(User updatedUser) async {

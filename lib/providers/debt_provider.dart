@@ -113,6 +113,7 @@ class DebtProvider with ChangeNotifier {
       if (debt != null) {
         final items = await _dbService.getDebtItems(debt.id);
         final comments = await _dbService.getComments(debt.id);
+        await fetchComments(debtId);
         _currentDebt = DebtThread(
           debt: debt,
           items: items,

@@ -16,15 +16,18 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   late TextEditingController _nameController;
   late TextEditingController _usernameController;
   late TextEditingController _phoneController;
+  User? currentUser;
+  late AuthProvider authProvider;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
-    _nameController = TextEditingController(text: user?.name ?? '');
-    _usernameController = TextEditingController(text: user?.username ?? '');
-    _phoneController = TextEditingController(text: user?.phone ?? '');
+    authProvider = Provider.of<AuthProvider>(context, listen: false);
+    currentUser = authProvider.currentUser;
+    _nameController = TextEditingController(text: currentUser?.name ?? '');
+    _usernameController = TextEditingController(text: currentUser?.username ?? '');
+    _phoneController = TextEditingController(text: currentUser?.phone ?? '');
   }
 
   @override
@@ -41,17 +44,15 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         _isLoading = true;
       });
       try {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        final apiService = authProvider.apiService; // Access apiService from AuthProvider
+        final dbService = authProvider.dbService; // Access dbService from AuthProvider
 
-        final User updatedUser = await apiService.updateMyProfile(
-          name: _nameController.text,
-          username: _usernameController.text,
-          phone: _phoneController.text,
-        );
+        currentUser!.name = _nameController.text;
+        currentUser!.username = _usernameController.text;
+        currentUser!.phone = _phoneController.text;
+        await dbService.updateUser(currentUser);
 
-        // Update the AuthProvider's current user with the fresh data from the API
-        authProvider.updateCurrentUser(updatedUser);
+        // Update the AuthProvider's current user
+        authProvider.refreshProfileData();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

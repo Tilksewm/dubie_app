@@ -31,6 +31,7 @@ class AuthProvider with ChangeNotifier {
     _loadSessionAndPinStatus();
   }
   get apiService => _apiService;
+  get dbService => _dbService;
 
   bool get isAuthenticated => _isAuthenticated;
   User? get currentUser => _currentUser;
@@ -60,19 +61,16 @@ class AuthProvider with ChangeNotifier {
     // Check for JWT token presence
     _isAuthenticated = prefs.getString('jwt_token') != null && prefs.getString('user_id') != null;
 
-    if (_isAuthenticated) {
       try {
-        // Fetch full user profile from the backend using the stored JWT
         _currentUser = await _dbService.getUser(prefs.getString('user_id')!);
       } on ApiException catch (e) {
         // If getUser fails due to token issues, force local logout
         print("Error fetching user profile on startup: $e. Forcing logout.");
-        await logout(notifyBackend: false); // Local logout
+        //await logout(notifyBackend: false); // Local logout
       } catch (e) {
         print("Unexpected error fetching user profile on startup: $e. Forcing logout.");
         await logout(notifyBackend: false);
       }
-    }
 
     _isPinEnabled = await PinStorage.isPinEnabled();
     if (_isPinEnabled) {
@@ -204,7 +202,7 @@ class AuthProvider with ChangeNotifier {
       await logout(notifyBackend: false);
     } catch (e) {
       print("Unexpected error refreshing profile data: $e. Attempting logout.");
-      await logout(notifyBackend: false);
+      //await logout(notifyBackend: false);
     }
   }
 
@@ -215,10 +213,13 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> startWithNoAuth() async {
+    
+    print('start with no outh 1');
     if(prefs.getString('user_id') == null){
+      print('start with no outh 2');
       final newUserId = Uuid().v4();
       prefs.setString('user_id', newUserId);
-      await _dbService.addUser(User(
+      final newUser = User(
         id: newUserId,
         email: null,
         name: 'Unknown',
@@ -227,11 +228,13 @@ class AuthProvider with ChangeNotifier {
         userType: 'temporary',
         createdAt: DateTime.now().toIso8601String(),
         updatedAt: DateTime.now().toIso8601String()
-      ));
+      );
+      await _dbService.addUser(newUser);
+      print('start with no outh 3 ${newUser.name}');
     }
     final newUserId = prefs.getString('user_id')!;
     _currentUser = await _dbService.getUser(newUserId);
-    notifyListeners();
+    print('${_currentUser!.name}');
   }
 }
 // // lib/providers/auth_provider.dart
