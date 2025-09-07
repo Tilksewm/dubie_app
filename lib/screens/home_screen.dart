@@ -1,3 +1,5 @@
+import 'package:dubie_app/l10n/app_localizations.dart';
+import 'package:dubie_app/providers/language_provider.dart';
 import 'package:dubie_app/screens/pin_lock_screen.dart';
 import 'package:dubie_app/screens/profile_edit_screen.dart';
 import 'package:dubie_app/screens/settings_screen.dart';
@@ -26,8 +28,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     // Fetch initial data when the screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<HomeProvider>(context, listen: false).fetchAllHomeData();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Provider.of<HomeProvider>(context, listen: false).fetchAllHomeData();
     });
   }
 
@@ -75,7 +77,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final homeProvider = Provider.of<HomeProvider>(context);
+    final homeProvider = context.watch<HomeProvider>();
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final loc = AppLocalizations.of(context)!;
     final user = authProvider.currentUser;
     // Format numbers as currency
     final NumberFormat currencyFormatter = NumberFormat.currency(
@@ -86,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ዱቤ App'),
+        title: Text(loc.appName),
         actions: [
           IconButton(
             icon: const Icon(Icons.lock_open),
@@ -101,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           children: <Widget>[
             UserAccountsDrawerHeader(
               accountName: Text(user?.name ?? 'Guest User'),
-              accountEmail: Text(user?.email ?? 'N/A'),
+              accountEmail: Text(user?.email ?? 'No Email'),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Text(
@@ -218,6 +222,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               },
             ),
             ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Language'),
+              trailing: DropdownButton<Locale>(
+                value: langProvider.locale,
+                  items: AppLocalizations.supportedLocales.map((locale) {
+                    final code = locale.languageCode;
+                    return DropdownMenuItem(
+                      value: locale,
+                        child: Text('${getCountry(code)}')
+                    );
+                  }).toList(),
+                  onChanged: (locale) {
+                  if (locale != null){
+                    langProvider.setLanguage(locale);
+                    Navigator.pop(context);
+                  }
+                }
+              ),
+            ),
+            ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
               onTap: () async {
@@ -285,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   children: [
 
                     // "Owes You" Tab (Borrowers)
-                    homeProvider.isLoadingBorrowers
+                    homeProvider.isLoadingBorrowers || homeProvider.borrowers == null
                         ? const Center(child: CircularProgressIndicator())
                         : homeProvider.borrowersError != null
                         ?
@@ -315,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
 
                     // "You Owe" Tab (Creditors)
-                    homeProvider.isLoadingCreditors
+                    homeProvider.isLoadingCreditors || homeProvider.creditors == null
                         ? const Center(child: CircularProgressIndicator())
                         : homeProvider.creditorsError != null
                         ? Center(child: Text('Error: ${homeProvider.creditorsError}'))
@@ -354,5 +378,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+
+  getCountry(String code) {
+    switch(code){
+      case 'en':
+        return 'English';
+      case 'am':
+        return 'Amharic';
+      default:
+        return code;
+    }
   }
 }

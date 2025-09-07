@@ -82,7 +82,7 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
           creditorId: debtProvider.currentUserId!,
           borrowerId: _selectedBorrowerId!,
           overallDescription: _overallDescriptionController.text,
-          status: "pending",
+          status: "new",
           createdAt: DateTime.now().toIso8601String(),
           updatedAt: DateTime.now().toIso8601String(),
         );

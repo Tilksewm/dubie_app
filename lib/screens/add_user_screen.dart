@@ -44,7 +44,6 @@ class _AddUserScreenState extends State<AddUserScreen> {
             MaterialPageRoute(
               builder: (context) => UserDebtsDetailScreen(
                 otherUserId: newUser.id,
-                otherUserName: newUser.name,
                 //totalAmountWithUser: 0.0, // Initial debt is 0.0 with a new user
               ),
             ),

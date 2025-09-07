@@ -27,13 +27,26 @@ class LocalDbService {
 
   Future<List<DebtItem>> getDebtItems(String debtId) async {
     final box = await debtItemBox;
-    return box.values.where((item) => item.debtId == debtId).toList();
+    return box.values.where((item) => item.debtId == debtId && item.syncStatus != SyncStatus.deleted).toList();
   }
 
   Future<void> updateDebtItem(DebtItem updatedDebtItem) async {
     final box = await debtItemBox;
     updatedDebtItem.syncStatus = SyncStatus.updated;
+    if (updatedDebtItem.paidAmount == updatedDebtItem.amount){
+      updatedDebtItem.isPaid = true;
+    } else {
+      updatedDebtItem.isPaid = false;
+    }
     await box.put(updatedDebtItem.id, updatedDebtItem);
+  }
+  Future<void> payDebtItem(DebtItem debtItem) async {
+    final box = await debtItemBox;
+    debtItem.syncStatus = SyncStatus.updated;
+    if (debtItem.paidAmount == debtItem.amount){
+      debtItem.isPaid = true;
+    }
+    await box.put(debtItem.id, debtItem);
   }
 
   Future<void> deleteDebtItem(DebtItem debtItem) async{
@@ -87,8 +100,8 @@ class LocalDbService {
     final box = await debtBox;
     return box.values
         .where((debt) =>
-            (debt.creditorId == currentUserId && debt.borrowerId == otherUserId) ||
-            (debt.creditorId == otherUserId && debt.borrowerId == currentUserId))
+            (debt.creditorId == currentUserId && debt.borrowerId == otherUserId && debt.syncStatus != SyncStatus.deleted) ||
+            (debt.creditorId == otherUserId && debt.borrowerId == currentUserId && debt.syncStatus != SyncStatus.deleted))
         .toList();
   }
   Future<void> deleteDebt(DebtThread debtThread) async {

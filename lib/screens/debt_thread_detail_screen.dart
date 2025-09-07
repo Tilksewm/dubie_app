@@ -44,34 +44,8 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       Provider.of<DebtProvider>(context, listen: false).fetchDebtDetails(widget.debtId);
     });
   }
-  // void _debtOnSave (DebtThread debtThread) async{
-  //   // i will add calling the back end to update descriptions and iteratively update every changed items
-  //   // print("Save called with: $result");
-  //   // final description = result["description"];
-  //   // final debts = result["items"];
-  //   if (debtThread.debt.overallDescription != null){
-  //     //print()
-  //     await Provider.of<DebtProvider>(context, listen: false)
-  //         .updateDebt(debtThread.debt);
-  //     print("print description value: ${debtThread.debt.overallDescription}");
-  //   }
-  //   for (var debtItem in debtThread.items){
-  //     if (debtItem.description != "" && debtItem.amount != 0){
-  //       await Provider.of<DebtProvider>(context, listen: false).updateDebtItem(debtItem);
-  //     }else if (debtItem.description == "" && debtItem.amount == 0){
-  //       await Provider.of<DebtProvider>(context, listen: false).deleteDebtItem(debtItem);
-  //     }
-  //   }
-  // }
+
   void _updateDebt (BuildContext context, DebtThread debtThread){
-    // final debt = debtThread.debt;
-    // Map<String, dynamic> description = {"id":debt.id, "value":debt.overallDescription ?? ""};
-    // List<Map<String, dynamic>> debtItems = debtThread.items.map((item) => {
-    //   "id": item.id,
-    //   "description": item.description,
-    //   "price": item.amount,
-    //   "paidAmount": item.paidAmount,
-    // }).toList();
     showDialog(
         context: context,
         builder: (_) => SizedBox(
@@ -231,33 +205,6 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               debtItem.paidAmount += amount;
               _payDebtItem(debtItem);
               Navigator.pop(context); // Close dialog
-              //
-              // try {
-              //   await Provider.of<DebtProvider>(context, listen: false).payDebtItem(
-              //     widget.debtId,
-              //     itemId,
-              //     amount,
-              //   );
-              //   //_refreshDebtDetails();
-              //   if (mounted) {
-              //     ScaffoldMessenger.of(context).showSnackBar(
-              //       const SnackBar(content: Text('Payment recorded!')),
-              //     );
-              //   }
-              //
-              // } on ApiException catch (e) {
-              //   if (mounted) {
-              //     ScaffoldMessenger.of(context).showSnackBar(
-              //       SnackBar(content: Text('Failed to record payment: ${e.message}')),
-              //     );
-              //   }
-              // } catch (e) {
-              //   if (mounted) {
-              //     ScaffoldMessenger.of(context).showSnackBar(
-              //       const SnackBar(content: Text('An unexpected error occurred.')),
-              //     );
-              //   }
-              // }
             },
             child: const Text('Pay'),
           ),
@@ -295,7 +242,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               _payDebtItem(item);
               totalAmount -= itemOutstanding;
             }else{
-              item.amount += totalAmount;
+              item.paidAmount += totalAmount;
               _payDebtItem(item);
               totalAmount = 0;
               break;
@@ -469,27 +416,20 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       ),
       body: Consumer<DebtProvider>(
         builder: (context, debtProvider, child) {
-          print('debt provider 1');
           if (debtProvider.isLoadingDebt && debtProvider.currentDebt == null) {
-             print('debt provider 2 null');
             return const Center(child: CircularProgressIndicator());
           }
           if (debtProvider.debtError != null) {
-            print('debt provider 3 !null');
             return Center(child: Text('Error: ${debtProvider.debtError}'));
           }
-          print('debt provider 4 ${debtProvider.currentDebt}');
           if (debtProvider.currentDebt == null) {
-            print('debt provider 5 null');
             return const Center(child: Text('Debt not found.'));
           }
-          print('debt provider 6 ');
 
           final debtThread = debtProvider.currentDebt!;
           final debt = debtThread.debt;
           final bool isCreditor = debt.creditorId == debtProvider.currentUserId;
           final bool isBorrower = debt.borrowerId == debtProvider.currentUserId;
-          print('debt provider 7 ');
 
           return RefreshIndicator(
             onRefresh: _refreshDebtDetails,
@@ -505,11 +445,6 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Text(
-                              //   'Debt ID: ${debt.id.substring(0, 8)}...',
-                              //   style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              // ),
-                              // const SizedBox(height: 8),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
@@ -608,7 +543,9 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                   ),
                                 ],
                               ),
-                              trailing: !item.isPaid && isCreditor
+                              trailing: item.isPaid ?
+                                  Text("Paid", style: TextStyle(color: Colors.green, fontSize: 16),):
+                                isCreditor
                                   ? IconButton(
                                 icon: const Icon(Icons.payment, color: Colors.blue),
                                 onPressed: debtProvider.isActionInProgress
@@ -622,7 +559,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                       const SizedBox(height: 16),
 
                       // Add New Item
-                      if (isCreditor && (debt.status == 'new' || debt.status == 'accepted' || debt.status == 'amended_pending_reacceptance'))
+                      if (isCreditor)
                         ElevatedButton.icon(
                           onPressed: debtProvider.isActionInProgress ? null : _showAddItemDialog,
                           icon: const Icon(Icons.add_shopping_cart),

@@ -1,4 +1,5 @@
 import 'package:dubie_app/providers/home_provider.dart';
+import 'package:dubie_app/providers/user_provider.dart';
 import 'package:dubie_app/screens/user_info_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,18 +13,15 @@ import 'package:dubie_app/screens/create_debt_screen.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../models/user.dart';
 import '../widgets/item_list_without_overlap.dart';
 
 class UserDebtsDetailScreen extends StatefulWidget {
   final String otherUserId;
-  final String? otherUserName;
-  final String? userType; // Passed from HomeUserCard for AppBar display
 
   const UserDebtsDetailScreen({
     super.key,
     required this.otherUserId,
-    this.otherUserName,
-    this.userType,
   });
 
   @override
@@ -41,12 +39,13 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<DebtProvider>(context, listen: false).fetchDebtsWithUser(widget.otherUserId);
+      _refreshDebts();
     });
   }
 
   Future<void> _refreshDebts() async {
     await Provider.of<DebtProvider>(context, listen: false).fetchDebtsWithUser(widget.otherUserId);
+    await Provider.of<UserProvider>(context, listen: false).getUserById(widget.otherUserId);
   }
 
   void inviteFriend() {
@@ -60,6 +59,11 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
         subject: "Join me on Dubé",
       )
     );
+  }
+  String getInitials(String fullName) {
+    final parts = fullName.trim().split(" ");
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return "${parts[0][0].toUpperCase()}${parts[1][0].toUpperCase()}";
   }
 
 
@@ -81,6 +85,12 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final debtProvider = Provider.of<DebtProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    if(userProvider.currentUser == null || debtProvider.debtsWithUser == null){
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator(),),
+      );
+    }
     double totalAmountWithUser = 0;
     double totalBorrowAmount = 0;
     double totalCreditAmount = 0;
@@ -92,18 +102,127 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
       }
     }
     totalAmountWithUser = totalCreditAmount - totalBorrowAmount;
+
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) =>
-                UserInfoScreen(userId:widget.otherUserId, userName:widget.otherUserName!, userType: widget.userType!)
-            )
-          ),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (ctx) {
+                return Consumer<UserProvider>(
+                    builder: (ctx, userProvider, child) {
+                      return AlertDialog(
+                        content:
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Center(
+                              child: CircleAvatar(
+                                radius: 40,
+                                backgroundColor: Colors.teal.shade700,
+                                child: Text(
+                                  getInitials(userProvider.currentUser!.name),
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Center(
+                              child: Text(
+                                userProvider.currentUser!.name,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Center(
+                              child: Text(
+                                userProvider.currentUser!.email ?? "",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+                            if (userProvider.currentUser!.phone != null &&
+                                userProvider.currentUser!.phone!
+                                    .isNotEmpty) ...[
+                              Row(
+                                children: [
+                                  const Icon(
+                                      Icons.phone, color: Colors.blueAccent),
+                                  const SizedBox(width: 10),
+                                  Text(userProvider.currentUser!.phone!),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+                            if (userProvider.currentUser!.username != null &&
+                                userProvider.currentUser!.username!
+                                    .isNotEmpty) ...[
+                              Row(
+                                children: [
+                                  const Icon(Icons.person, color: Colors.teal),
+                                  const SizedBox(width: 10),
+                                  Text(userProvider.currentUser!.username!),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+
+                        actions: [
+                          userProvider.currentUser!.userType != 'real' ?
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(ctx).pop(); // Close dialog
+                                },
+                                child: const Text('Close'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (ctx) =>
+                                        UserInfoScreen(
+                                            user: userProvider.currentUser!)),
+                                  );
+                                  // Refresh profile data in drawer after editing
+                                  userProvider.getUserById(
+                                      userProvider.currentUser!.id);
+                                },
+                                child: const Text('Edit'),
+                              ),
+                            ],
+                          ) :
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(ctx).pop(); // Close dialog
+                            },
+                            child: const Text('Close'),
+                          ),
+                        ],
+                      );
+                    }
+                );
+              });
+            },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.otherUserName ?? 'Debt Details', style: const TextStyle(fontSize: 18)),
+              Text(userProvider.currentUser!.name ?? 'Debt Details', style: const TextStyle(fontSize: 18)),
               Text(
                 'Total: ${currencyFormatter.format(totalAmountWithUser)}',
                 style: const TextStyle(fontSize: 14, color: Colors.white70),
@@ -114,7 +233,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
 
         actions: [
           Padding(padding: EdgeInsets.fromLTRB(0, 0, 30, 0),
-            child: userStatus('${widget.userType}'),
+            child: userStatus(userProvider.currentUser!.userType),
           )
         ],
       ),
@@ -140,15 +259,15 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('No debt threads found with ${widget.otherUserName ?? "this user"}.'),
+                    Text('No debt threads found with ${userProvider.currentUser!.name ?? "this user"}.'),
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: () async {
                         final result = await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => CreateDebtScreen(
-                              initialBorrowerId: widget.otherUserId,
-                              initialBorrowerName: widget.otherUserName,
+                              initialBorrowerId: userProvider.currentUser!.id,
+                              initialBorrowerName: userProvider.currentUser!.name,
                             ),
                           ),
                         );
@@ -196,13 +315,12 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                         MaterialPageRoute(
                           builder: (context) => DebtThreadDetailScreen(
                             debtId: debt.id,
-                            otherUserName: widget.otherUserName,
+                            otherUserName: userProvider.currentUser!.name,
                           ),
                         ),
                       );
-                      if (result == true) {
-                        _refreshDebts(); // Refresh if actions were performed on the debt thread
-                      }
+                        debtProvider.fetchDebtsWithUser(userProvider.currentUser!.id); // Refresh if actions were performed on the debt thread
+                        context.read<HomeProvider>().fetchAllHomeData();
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -267,7 +385,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
             MaterialPageRoute(
               builder: (context) => CreateDebtScreen(
                 initialBorrowerId: widget.otherUserId,
-                initialBorrowerName: widget.otherUserName,
+                initialBorrowerName: userProvider.currentUser!.name,
               ),
             ),
           );
@@ -280,9 +398,9 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     );
   }
   Widget userStatus (String userStatus) {
-    if (userStatus == 'User') {
+    if (userStatus == 'real') {
       return Text(
-        userStatus,
+        'User',
         style: TextStyle(
           fontSize: 14,
           color: Colors.grey[600],
@@ -292,7 +410,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
       return ElevatedButton(
         onPressed: inviteFriend,
         child: Text(
-          userStatus,
+          'Invite',
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey[600],

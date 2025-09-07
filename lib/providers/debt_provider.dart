@@ -176,7 +176,7 @@ class DebtProvider with ChangeNotifier {
     _actionError = null;
     //notifyListeners();
     try {
-      await _dbService.updateDebtItem(debtItem);
+      await _dbService.payDebtItem(debtItem);
       // After payment, refresh the debt details to get updated amounts and item status
       await fetchDebtDetails(debtItem.debtId);
     } catch (e) {
@@ -231,6 +231,7 @@ class DebtProvider with ChangeNotifier {
       rethrow;
     } finally {
       _isActionInProgress = false;
+      fetchDebtDetails(debtItem.debtId);
       notifyListeners();
     }
   }
@@ -249,24 +250,6 @@ class DebtProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-
-  // Future<void> updateDebtDescription(String debtId, String description) async {
-  //   _isActionInProgress = true;
-  //   _actionError = null;
-  //   //notifyListeners();
-  //   try {
-  //     await _dbService.updateDebtDescription(debtId, description);
-  //   } on ApiException catch (e) {
-  //     _actionError = e.message;
-  //     rethrow;
-  //   } catch (e) {
-  //     _actionError = 'Failed to record payment: $e';
-  //     rethrow;
-  //   } finally {
-  //     _isActionInProgress = false;
-  //     notifyListeners();
-  //   }
-  // }
 
   Future<void> addComment(String debtId, String commentText) async {
     _isActionInProgress = true;

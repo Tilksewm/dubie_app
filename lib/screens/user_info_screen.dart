@@ -10,10 +10,8 @@ import '../models/user.dart';
 import '../providers/user_provider.dart'; // Import the detail screen
 
 class UserInfoScreen extends StatefulWidget {
-  final String userId;
-  final String userName;
-  final String userType;
-  const UserInfoScreen({super.key, required this.userId, required this.userName, required this.userType});
+  final User user;
+  const UserInfoScreen({super.key,required this.user});
 
   @override
   State<UserInfoScreen> createState() => _UserInfoScreenState();
@@ -29,8 +27,8 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_){
-      Provider.of<UserProvider>(context, listen: false).getUserById(widget.userId);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Provider.of<UserProvider>(context, listen: false).getUserById(widget.user.id);
     });
   }
 
@@ -40,20 +38,22 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         _isLoading = true;
       });
       try {
-        if(name.isNotEmpty){
-          final updatedUser = await Provider.of<UserProvider>(context, listen: false).editTemporaryUser(
-            widget.userId,
-            name: name,
-            phone: phone ,//_phoneController.text.isNotEmpty ? _phoneController.text : null,
-            email: email, //_emailController.text.isNotEmpty ? _emailController.text : null,
-            username: username, //_usernameController.text.isNotEmpty ? _usernameController.text : null,
-          );
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Person updated successfully!')),
+        if(widget.user.userType != 'real'){
+          if (name.isNotEmpty){
+            final updatedUser = await Provider.of<UserProvider>(context, listen: false).editTemporaryUser(
+              widget.user.id,
+              name: name,
+              phone: phone ,//_phoneController.text.isNotEmpty ? _phoneController.text : null,
+              email: email, //_emailController.text.isNotEmpty ? _emailController.text : null,
+              username: username, //_usernameController.text.isNotEmpty ? _usernameController.text : null,
             );
-            // Navigator.of(context).pop(); // Pop this AddUserScreen first
-            //
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Person updated successfully!')),
+              );
+              // Navigator.of(context).pop(); // Pop this AddUserScreen first
+              //
+            }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Name can\'t be empty')),
@@ -111,7 +111,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       );
     }
 
-    if (thisUser?.userType == 'temporary'){
+    if (thisUser?.userType != 'real'){
       return Scaffold(
         appBar: AppBar(
           title: const Text('update User data'),
@@ -166,98 +166,21 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ElevatedButton(
-                  onPressed: () => _updateUser(
-                    nameController.text,
-                    phoneController.text,
-                    emailController.text,
-                    usernameController.text
-                  ),
+                  onPressed: () {
+                    _updateUser(
+                        nameController.text,
+                        phoneController.text,
+                        emailController.text,
+                        usernameController.text
+                    );
+                    Navigator.of(context).pop();
+                  },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text('Add Person', style: TextStyle(fontSize: 18)),
+                  child: const Text('Save', style: TextStyle(fontSize: 18)),
                 ),
               ],
-            ),
-          ),
-        ),
-      );
-    }
-    if (thisUser?.userType == 'real' || thisUser?.userType == 'placeholder'){
-      final initials = getInitials(thisUser!.name);
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('User Info'),
-          centerTitle: true,
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            elevation: 6,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.teal.shade700,
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: Text(
-                      thisUser.name,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: Text(
-                      thisUser.email ?? "",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-                  if (thisUser.phone != null && thisUser.phone!.isNotEmpty) ...[
-                    Row(
-                      children: [
-                        const Icon(Icons.phone, color: Colors.blueAccent),
-                        const SizedBox(width: 10),
-                        Text(thisUser.phone!),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                  if (thisUser.username != null && thisUser.username!.isNotEmpty) ...[
-                    Row(
-                      children: [
-                        const Icon(Icons.person, color: Colors.teal),
-                        const SizedBox(width: 10),
-                        Text(thisUser.username!),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
             ),
           ),
         ),

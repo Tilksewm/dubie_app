@@ -59,22 +59,6 @@ class HomeProvider with ChangeNotifier {
     }
   }
 
-  // Future<void> getUserType(String userId) async {
-  //   _isLoadingUserType = true;
-  //   _userTypeError = null;
-  //   notifyListeners();
-  //   try {
-  //     _userType = await _apiService.getUserType(userId);
-  //   } on ApiException catch (e) {
-  //     _userTypeError = e.message;
-  //   } catch (e) {
-  //     _userTypeError = 'Failed to load creditors: $e';
-  //   } finally {
-  //     _isLoadingUserType = false;
-  //     notifyListeners();
-  //   }
-  // }
-
   Future<void> fetchCreditors() async {
     _isLoadingCreditors = true;
     _creditorsError = null;
@@ -114,6 +98,7 @@ class HomeProvider with ChangeNotifier {
       fetchCreditors(),
       fetchBorrowers(),
     ]);
+    notifyListeners();
   }
 
   Future<User> createPlaceholderUser({required String name, String? phone, String? email, String? username}) async {
