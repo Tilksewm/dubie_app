@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // Helper to build item chip (corrected: removed internal margin)
 Widget _buildItemChip({required String text}) {
-  return Expanded(child:
+  return
     Container(
     height: 36,
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -32,8 +32,7 @@ Widget _buildItemChip({required String text}) {
           fontWeight: FontWeight.w600,
         ),
       ),
-    ),
-  );
+    );
 }
 
 // Widget to display all chips with wrap-around behavior
@@ -41,9 +40,9 @@ class WrapAroundChipDisplay extends StatelessWidget {
   final List<String> items;
 
   const WrapAroundChipDisplay({
-    Key? key,
+    super.key,
     required this.items,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

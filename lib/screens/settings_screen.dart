@@ -30,19 +30,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Set PIN'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: PinLockScreen(
-            isInitialSetup: true,
-            onPinVerified: () {
-              Navigator.of(ctx).pop(); // Pop PIN dialog
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PIN set successfully!')),
-              );
-            },
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
+        contentPadding: EdgeInsets.zero,
+
+        content: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            width: double.maxFinite,
+            child: PinLockScreen(
+              isInitialSetup: true,
+              onPinVerified: () {
+                Navigator.of(ctx).pop(); // Pop PIN dialog
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('PIN set successfully!')),
+                );
+              },
+            ),
+          ),
+        )
       ),
     );
   }

@@ -2,7 +2,9 @@ import 'package:dubie_app/services/local_db_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Needed for RemoteApiService
 import 'package:dubie_app/services/api_service.dart';
-import 'package:dubie_app/models/user.dart'; // For HomeUser model
+import 'package:dubie_app/models/user.dart';
+
+import '../models/home_user.dart'; // For HomeUser model
 
 class HomeProvider with ChangeNotifier {
   final RemoteApiService _apiService;

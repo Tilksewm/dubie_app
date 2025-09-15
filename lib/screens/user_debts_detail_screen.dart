@@ -254,33 +254,42 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
           :
           debtProvider.debtsWithUser == null || debtProvider.debtsWithUser!.isEmpty?
           RefreshIndicator(
-              onRefresh: _refreshDebts,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('No debt threads found with ${userProvider.currentUser!.name ?? "this user"}.'),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final result = await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => CreateDebtScreen(
-                              initialBorrowerId: userProvider.currentUser!.id,
-                              initialBorrowerName: userProvider.currentUser!.name,
+            onRefresh: _refreshDebts,
+            child: LayoutBuilder(builder: (context, constraints){
+              return ListView(
+                children: [
+                  ConstrainedBox (
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('No debt threads found with ${userProvider.currentUser!.name ?? "this user"}.'),
+                            const SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final result = await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => CreateDebtScreen(
+                                      initialBorrowerId: userProvider.currentUser!.id,
+                                      initialBorrowerName: userProvider.currentUser!.name,
+                                    ),
+                                  ),
+                                );
+                                if (result == true) {
+                                  _refreshDebts(); // Refresh if a new debt was created
+                                }
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('Start New Dubie'),
                             ),
-                          ),
-                        );
-                        if (result == true) {
-                          _refreshDebts(); // Refresh if a new debt was created
-                        }
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Start New Dubie'),
-                    ),
-                  ],
-                ),
-              )
+                          ],
+                        ),
+                      )
+                  )
+                ],
+              );
+            }),
           )
           :
           RefreshIndicator(
@@ -319,7 +328,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                           ),
                         ),
                       );
-                        debtProvider.fetchDebtsWithUser(userProvider.currentUser!.id); // Refresh if actions were performed on the debt thread
+                        debtProvider.fetchDebtsWithUser(userProvider.currentUser!.id);
                         context.read<HomeProvider>().fetchAllHomeData();
                     },
                     child: Padding(

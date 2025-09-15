@@ -1,17 +1,20 @@
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/providers/language_provider.dart';
+import 'package:dubie_app/screens/auth/login_screen.dart';
 import 'package:dubie_app/screens/pin_lock_screen.dart';
 import 'package:dubie_app/screens/profile_edit_screen.dart';
 import 'package:dubie_app/screens/settings_screen.dart';
+import 'package:dubie_app/screens/signin_suggestion_card.dart';
+import 'package:dubie_app/services/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // For number formatting
 
 import 'package:dubie_app/providers/auth_provider.dart';
 import 'package:dubie_app/providers/home_provider.dart';
-import 'package:dubie_app/models/user.dart';
 import 'package:dubie_app/widgets/home_user_card.dart'; // We will create this
-import 'package:dubie_app/screens/add_user_screen.dart'; // We will create this
+import 'package:dubie_app/screens/add_user_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // We will create this
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,11 +24,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  bool suggestLogin = false;
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    validSuggestionCount();
     _tabController = TabController(length: 2, vsync: this);
     // Fetch initial data when the screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -41,6 +46,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _refreshHomeData() async {
     await Provider.of<HomeProvider>(context, listen: false).fetchAllHomeData();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.isAuthenticated){
+      SyncService syncService = SyncService();
+      syncService.syncData();
+    }
   }
   // New: Method to manually lock the app
   void _lockAppManually() async {
@@ -73,6 +83,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (parts.length == 1) return parts[0][0].toUpperCase();
     return "${parts[0][0].toUpperCase()}${parts[1][0].toUpperCase()}";
   }
+  Future<void> validSuggestionCount() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (preferences.getInt('visibility_count') == null){
+      await preferences.setInt('visibility_count', 0);
+    }
+    int visibilityCount = preferences.getInt('visibility_count')!;
+    suggestLogin = visibilityCount<3;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final langProvider = Provider.of<LanguageProvider>(context);
     final loc = AppLocalizations.of(context)!;
     final user = authProvider.currentUser;
+    final bool suggestLogin = (!authProvider.isAuthenticated) && this.suggestLogin;
     // Format numbers as currency
     final NumberFormat currencyFormatter = NumberFormat.currency(
       locale: 'en_US', // Or your desired locale for currency
@@ -241,16 +260,48 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 }
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () async {
-                Navigator.pop(context); // Close the drawer first
-                await authProvider.logout();
-                if (mounted) {
-                  Navigator.of(context).pushReplacementNamed('/login'); // Corrected from /auth
-                }
-              },
+            authProvider.isAuthenticated ?
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
+                onTap: () async {
+                  Navigator.pop(context); // Close the drawer first
+                  await authProvider.logout().then(
+                    await Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => const LoginScreen())));
+                },
+              ):
+            // The sign in/sign up section
+            const Divider(),
+            if (!authProvider.isAuthenticated)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  const Text(
+                    'Sign in to sync your data and get personalized content.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14.0),
+                  ),
+                  const SizedBox(height: 16.0),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32.0, vertical: 12.0),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (context) => const LoginScreen()
+                          )
+                      );
+                    },
+                    child: const Text('Sign In / Sign Up'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -300,6 +351,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             unselectedLabelColor: Colors.black87,
             indicatorColor: Colors.black,
           ),
+          if (suggestLogin)
+          SignInSuggestionCard(),
           Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshHomeData,
@@ -315,18 +368,37 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ?
                     RefreshIndicator(
                       onRefresh: _refreshHomeData,
-                      child: Center(child: Text('Error: ${homeProvider.borrowersError}'))
+                      child: LayoutBuilder(builder: (context, constraints){
+                        return ListView(
+                          children: [
+                            ConstrainedBox (
+                                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                                child: Center( child: Text('Error: ${homeProvider.borrowersError}'))
+                            )
+                          ],
+                        );
+                      }),
                     )
                         : homeProvider.borrowers!.isEmpty
                         ?
                     RefreshIndicator(
                         onRefresh: _refreshHomeData,
-                        child: const Center(child: Text('No one currently owes you money.'))
+                        child: LayoutBuilder(builder: (context, constraints){
+                          return ListView(
+                            children: [
+                              ConstrainedBox (
+                                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                                child: Center( child: Text('No one currently owes you money.'))
+                              )
+                            ],
+                          );
+                        }),
                     )
                         :
                     RefreshIndicator( // Added RefreshIndicator
                       onRefresh: _refreshHomeData,
-                      child: ListView.builder(
+                      child:
+                      ListView.builder(
                         itemCount: homeProvider.borrowers!.length,
                         itemBuilder: (context, index) {
                           final user = homeProvider.borrowers![index];
@@ -342,10 +414,37 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     homeProvider.isLoadingCreditors || homeProvider.creditors == null
                         ? const Center(child: CircularProgressIndicator())
                         : homeProvider.creditorsError != null
-                        ? Center(child: Text('Error: ${homeProvider.creditorsError}'))
+                        ?
+                    RefreshIndicator(
+                      onRefresh: _refreshHomeData,
+                      child: LayoutBuilder(builder: (context, constraints){
+                        return ListView(
+                          children: [
+                            ConstrainedBox (
+                                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                                child: Center( child: Text('Error: ${homeProvider.creditorsError}'))
+                            )
+                          ],
+                        );
+                      }),
+                    )
                         : homeProvider.creditors!.isEmpty
-                        ? const Center(child: Text('No one you currently owe money to.'))
-                        : RefreshIndicator( // Added RefreshIndicator
+                        ?
+                    RefreshIndicator(
+                        onRefresh: _refreshHomeData,
+                      child: LayoutBuilder(builder: (context, constraints){
+                        return ListView(
+                          children: [
+                            ConstrainedBox (
+                                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                                child: Center( child: Text('No one currently you owes money.'))
+                            )
+                          ],
+                        );
+                      }),
+                    )
+                        :
+                    RefreshIndicator( // Added RefreshIndicator
                       onRefresh: _refreshHomeData,
                       child: ListView.builder(
                         itemCount: homeProvider.creditors!.length,
@@ -353,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           final user = homeProvider.creditors![index];
                           return HomeUserCard(
                             homeUser: user,
-                            isOwedByMe: false, // I owe them
+                            isOwedByMe: true, // They owe me
                           );
                         },
                       ),

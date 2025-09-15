@@ -1,5 +1,6 @@
 // lib/providers/auth_provider.dart
 import 'package:dubie_app/services/local_db_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dubie_app/services/api_service.dart';
@@ -54,9 +55,12 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _loadSessionAndPinStatus() async {
-    print("Loaded token: ${prefs.getString('jwt_token')}");
-    print("Loaded user_id: ${prefs.getString('user_id')}");
-    print("pin status ${prefs.getString('pin')} ");
+    if (kDebugMode) {
+      print("Loaded token: ${prefs.getString('jwt_token')}");
+      print("Loaded user_id: ${prefs.getString('user_id')}");
+      print("pin status ${prefs.getString('pin')} ");
+    }
+
     _isLoading = true;
     // Check for JWT token presence
     _isAuthenticated = prefs.getString('jwt_token') != null && prefs.getString('user_id') != null;
@@ -109,7 +113,7 @@ class AuthProvider with ChangeNotifier {
       );
       // After signup, the user needs to verify email before they can log in.
       // Do not auto-login here. User needs to check email.
-      // You might want to navigate to a "check your email" screen.
+      // We might want to navigate to a "check your email" screen.
     } catch (e) {
       rethrow;
     }
@@ -121,15 +125,18 @@ class AuthProvider with ChangeNotifier {
         await _apiService.signout(); // Call backend signout (if blacklisting implemented)
       }
     } catch (e) {
-      print('Error calling backend signout (expected for stateless JWT): $e');
+      if (kDebugMode) {
+        print('Error calling backend signout (expected for stateless JWT): $e');
+      }
     } finally {
       _isAuthenticated = false;
-      _currentUser = null;
-      _isPinEnabled = false;
-      _pin = null;
-      await PinStorage.deletePin();
-      await PinStorage.setPinEnabled(false);
-      await PinStorage.resetPinAttempts();
+      startWithNoAuth();
+      // _currentUser = null;
+      // _isPinEnabled = false;
+      // _pin = null;
+      // await PinStorage.deletePin();
+      // await PinStorage.setPinEnabled(false);
+      // await PinStorage.resetPinAttempts();
       notifyListeners();
     }
   }
@@ -151,10 +158,7 @@ class AuthProvider with ChangeNotifier {
     if (isPinLockedOut) {
       throw Exception('PIN entry is locked out. Please try again later.');
     }
-
-    if (_pin == null) {
-      _pin = await PinStorage.getPin();
-    }
+    _pin ??= await PinStorage.getPin();
 
     if (enteredPin == _pin) {
       await PinStorage.resetPinAttempts();

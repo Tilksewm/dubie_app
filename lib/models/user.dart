@@ -42,21 +42,7 @@ class User extends HiveObject {
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
 }
-class HomeUser {
-  final String userId;
-  final String? name;
-  final double totalAmount;
-  final String type;
-  final List<String> recentItems;
 
-  HomeUser({
-    required this.userId,
-    this.name,
-    required this.totalAmount,
-    required this.type,
-    required this.recentItems,
-  });
-}
 /*
   User copyWith({
     String? id,

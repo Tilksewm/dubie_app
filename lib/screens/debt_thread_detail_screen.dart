@@ -389,8 +389,18 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
           },
         ),
         actions: [
-      Consumer<DebtProvider>(builder: (BuildContext context, DebtProvider value, Widget? child) {
-        final Color amountColor = value.currentDebt!.outstandingAmount! >= 0 ? Colors.green.shade700 : Colors.red.shade700;
+      Consumer<DebtProvider>(
+        builder: (context, debtProvider, child) {
+          if (debtProvider.isLoadingDebt && debtProvider.currentDebt == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (debtProvider.debtError != null) {
+            return Center(child: Text('Error: ${debtProvider.debtError}'));
+          }
+          if (debtProvider.currentDebt == null) {
+            return const Center(child: Text('Debt not found.'));
+          }
+        final Color amountColor = debtProvider.currentDebt!.outstandingAmount! >= 0 ? Colors.green.shade700 : Colors.red.shade700;
         return
           Padding(
             padding: EdgeInsets.fromLTRB(0,0, 30, 0),
@@ -402,7 +412,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                     style: TextStyle(fontSize: 14,),
                   ),
                   Text(
-                    currencyFormatter.format(value.currentDebt?.outstandingAmount),
+                    currencyFormatter.format(debtProvider.currentDebt?.outstandingAmount),
                     style: TextStyle(fontSize: 18,),
                   )
                 ],

@@ -1,9 +1,11 @@
 // lib/services/local_db_service.dart
 import 'package:dubie_app/providers/debt_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/debt.dart';
+import '../models/home_user.dart';
 import '../models/user.dart';
 import '../models/debt_item.dart';
 import '../models/comment.dart';
@@ -202,10 +204,29 @@ class LocalDbService {
       List<Debt> debtsOwedByUser = debtBoxInstance.values.where((debt) =>
           debt.borrowerId == userId
       ).toList();
+      // print all debts owed by user for testing purpose
+
       // order debtOwedByUser by recent updatedAt date first
       debtsOwedByUser.sort((a,b) => DateTime.parse(b.updatedAt).compareTo(DateTime.parse(a.updatedAt)));
+      for (var debt in debtsOwedByUser) {
+        print("--- Debt Object ---");
+        // Convert the object to a Map
+        Map<String, dynamic> debtMap = debt.toJson(); // Assuming toJson() exists
+
+        // Iterate over the map and print key-value pairs
+        debtMap.forEach((key, value) {
+          print("$key: $value");
+        });
+        print("--------------------");
+      }
       // Get unique creditor IDs
       Set<String> creditorIds = debtsOwedByUser.map((debt) => debt.creditorId).toSet();
+      for (var id in creditorIds){
+        print('*************************');
+        print(id);
+        print('*************************');
+      }
+
       List<HomeUser> creditors = [];
       for (var creditorId in creditorIds) {
         User? user = userBoxInstance.get(creditorId);
@@ -232,6 +253,18 @@ class LocalDbService {
           ));
         }
       }
+      for (var homeUser in creditors) {
+        print("--- Debt Object ---");
+        // Convert the object to a Map
+        Map<String, dynamic> userMap = homeUser.toJson(); // Assuming toJson() exists
+
+        // Iterate over the map and print key-value pairs
+        userMap.forEach((key, value) {
+          print("$key: $value");
+        });
+        print("--------------------");
+      }
+
       return creditors;
     } else if (filter == 'borrowers') {
       final debtBoxInstance = await debtBox;
@@ -241,10 +274,26 @@ class LocalDbService {
       List<Debt> debtsOwedToUser = debtBoxInstance.values.where((debt) =>
           debt.creditorId == userId
       ).toList();
+      for (var debt in debtsOwedToUser) {
+        print("--- Debt Object ---");
+        // Convert the object to a Map
+        Map<String, dynamic> debtMap = debt.toJson(); // Assuming toJson() exists
+
+        // Iterate over the map and print key-value pairs
+        debtMap.forEach((key, value) {
+          print("$key: $value");
+        });
+        print("--------------------");
+      }
       // order debtOwedToUser by recent updatedAt date first
       debtsOwedToUser.sort((a,b) => DateTime.parse(b.updatedAt).compareTo(DateTime.parse(a.updatedAt)));
       // Get unique creditor IDs
       Set<String> borrowerIds = debtsOwedToUser.map((debt) => debt.borrowerId).toSet();
+      for (var id in borrowerIds){
+        print('*************************');
+        print(id);
+        print('*************************');
+      }
       List<HomeUser> borrowers = [];
       for (var borrowerId in borrowerIds) {
         User? user = userBoxInstance.get(borrowerId);
@@ -270,6 +319,27 @@ class LocalDbService {
             recentItems: recentItems,
           ));
         }
+      }
+      for (var homeUser in borrowers) {
+        print("--- Debt Object ---");
+        // Convert the object to a Map
+        Map<String, dynamic> userMap = homeUser.toJson(); // Assuming toJson() exists
+
+        // Iterate over the map and print key-value pairs
+        userMap.forEach((key, value) {
+          print("$key: $value");
+        });
+        print("--------------------");
+      }
+      for (var user in userBoxInstance.values){
+        print('========================================');
+        Map<String, dynamic> userMap = user.toJson(); // Assuming toJson() exists
+
+        // Iterate over the map and print key-value pairs
+        userMap.forEach((key, value) {
+          print("$key: $value");
+        });
+        print('========================================');
       }
       return borrowers;
     }
@@ -311,5 +381,18 @@ class LocalDbService {
     await box.put(user.id, user);
     print('Placeholder user created with ID: ${user.id}');
     return user;
+  }
+  Future<void> clearDb() async {
+    await Hive.box('users').clear();
+    await Hive.box('users').close();
+
+    await Hive.box('debts').clear();
+    await Hive.box('debts').close();
+
+    await Hive.box('debt_items').clear();
+    await Hive.box('debt_items').close();
+
+    await Hive.box('comments').clear();
+    await Hive.box('comments').close();
   }
 }

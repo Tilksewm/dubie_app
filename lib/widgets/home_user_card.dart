@@ -9,6 +9,7 @@ import 'package:dubie_app/models/user.dart';
 import 'package:dubie_app/screens/user_debts_detail_screen.dart';
 
 
+import '../models/home_user.dart';
 import 'item_list_with_overlap.dart'; // We will create this next
 
 class HomeUserCard extends StatelessWidget {

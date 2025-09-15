@@ -8,8 +8,8 @@ import 'package:dubie_app/providers/user_provider.dart';
 import 'package:dubie_app/screens/auth/login_screen.dart';
 import 'package:dubie_app/screens/auth/signup_screen.dart';
 import 'package:dubie_app/services/local_db_service.dart';
+import 'package:dubie_app/services/sync_service.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -149,6 +149,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               }
               if (!auth.isAuthenticated) {
                 auth.startWithNoAuth();
+              }else{
+                SyncService syncService = SyncService();
+                syncService.syncData();
               }
 
               if (auth.isPinEnabled) {

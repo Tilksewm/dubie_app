@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/comment.dart';
 import 'package:dubie_app/models/user.dart';
+import 'package:dubie_app/models/home_user.dart';
 import 'package:uuid/uuid.dart'; // To get current user ID
 
 class DebtThread{

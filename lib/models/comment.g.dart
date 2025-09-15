@@ -64,7 +64,9 @@ Comment _$CommentFromJson(Map<String, dynamic> json) => Comment(
       commentText: json['commentText'] as String,
       userId: json['userId'] as String,
       createdAt: json['createdAt'] as String,
-      syncStatus: $enumDecode(_$SyncStatusEnumMap, json['syncStatus']),
+      syncStatus:
+          $enumDecodeNullable(_$SyncStatusEnumMap, json['syncStatus']) ??
+              SyncStatus.synced,
       debtId: json['debtId'] as String,
     );
 

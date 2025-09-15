@@ -26,7 +26,7 @@ class Comment extends HiveObject {
     required this.commentText,
     required this.userId,
     required this.createdAt,
-    required this.syncStatus,
+    this.syncStatus = SyncStatus.synced,
     required this.debtId
   });
 
