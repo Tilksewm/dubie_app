@@ -383,16 +383,23 @@ class LocalDbService {
     return user;
   }
   Future<void> clearDb() async {
-    await Hive.box('users').clear();
-    await Hive.box('users').close();
+    print('clear db start');
+    final user = await userBox;
+    final debt = await debtBox;
+    final debtItem = await debtItemBox;
+    final comment = await commentBox;
 
-    await Hive.box('debts').clear();
-    await Hive.box('debts').close();
+    await user.clear();
+    await user.close();
 
-    await Hive.box('debt_items').clear();
-    await Hive.box('debt_items').close();
+    await debt.clear();
+    await debt.close();
 
-    await Hive.box('comments').clear();
-    await Hive.box('comments').close();
+    await debtItem.clear();
+    await debtItem.close();
+
+    await comment.clear();
+    await comment.close();
+    print('clear db done');
   }
 }

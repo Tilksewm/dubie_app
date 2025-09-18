@@ -1,7 +1,6 @@
 // lib/providers/auth_provider.dart
 import 'package:dubie_app/services/local_db_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dubie_app/services/api_service.dart';
 import 'package:dubie_app/utils/pin_storage.dart';
@@ -73,7 +72,7 @@ class AuthProvider with ChangeNotifier {
         //await logout(notifyBackend: false); // Local logout
       } catch (e) {
         print("Unexpected error fetching user profile on startup: $e. Forcing logout.");
-        await logout(notifyBackend: false);
+        //await logout(notifyBackend: false);
       }
 
     _isPinEnabled = await PinStorage.isPinEnabled();
@@ -120,18 +119,17 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout({bool notifyBackend = true}) async {
+    print('logout start');
     try {
-      if (notifyBackend) {
-        await _apiService.signout(); // Call backend signout (if blacklisting implemented)
-      }
+      await _apiService.signout(); // Call backend signout (if blacklisting implemented)
     } catch (e) {
       if (kDebugMode) {
         print('Error calling backend signout (expected for stateless JWT): $e');
       }
     } finally {
       _isAuthenticated = false;
+      _currentUser = null;
       startWithNoAuth();
-      // _currentUser = null;
       // _isPinEnabled = false;
       // _pin = null;
       // await PinStorage.deletePin();
@@ -217,7 +215,6 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> startWithNoAuth() async {
-    
     print('start with no outh 1');
     if(prefs.getString('user_id') == null){
       print('start with no outh 2');

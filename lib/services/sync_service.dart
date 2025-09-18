@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:dubie_app/app_constants.dart';
+import 'package:dubie_app/main.dart';
 import 'package:dubie_app/models/comment.dart';
 import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/debt_item.dart';
@@ -23,7 +25,27 @@ class SyncService {
   Future<Box<User>> get userBox async => Hive.openBox<User>('users');
   Future<Box<DebtItem>> get debtItemBox async => Hive.openBox<DebtItem>('debt_items');
   Future<Box<Comment>> get commentBox async => Hive.openBox<Comment>('comments');
-  // Future<Box<dynamic>> get metadataBox async => Hive.openBox<Metadata>('metadata');
+
+  Timer? _syncTimer;
+  void startSyncing() {
+
+    // Prevent multiple timers from running
+    if (_syncTimer?.isActive ?? false) return;
+
+    print('Starting 3-minute sync timer...');
+    // Execute the first sync immediately, then start the timer
+    syncData();
+    _syncTimer = Timer.periodic(const Duration(minutes: 3), (timer) {
+      syncData();
+    });
+  }
+
+  // Stops the sync timer
+  void stopSyncing() {
+    print('Stopping sync timer...');
+    _syncTimer?.cancel();
+    _syncTimer = null;
+  }
 
   Future<void> syncData() async {
     print('sync start');
@@ -88,8 +110,7 @@ class SyncService {
         await prefs.setString('lastSyncedAt', responseData['serverTime']);
         print('last synced at updated to ${responseData['serverTime']}');
         print('sync success!!!!');
-        HomeProvider provider = HomeProvider(prefs);
-        provider.fetchAllHomeData();
+        homeProvider.fetchAllHomeData();
       } else {
         // Handle API errors
         print('Sync failed with status code: ${response.statusCode}. Reason: ${response.body}');

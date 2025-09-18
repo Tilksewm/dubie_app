@@ -1,3 +1,4 @@
+import 'package:dubie_app/main.dart';
 import 'package:dubie_app/providers/home_provider.dart';
 import 'package:dubie_app/providers/user_provider.dart';
 import 'package:dubie_app/screens/user_info_screen.dart';
@@ -34,6 +35,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     symbol: 'ETB ',
     decimalDigits: 2,
   );
+  late bool shouldHomeRefresh;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshDebts();
     });
+    shouldHomeRefresh = false;
   }
 
   Future<void> _refreshDebts() async {
@@ -103,7 +106,13 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     }
     totalAmountWithUser = totalCreditAmount - totalBorrowAmount;
 
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+          if (shouldHomeRefresh) await homeProvider.fetchAllHomeData();
+        // return true to allow pop, false to block it
+        return true;
+    },
+    child: Scaffold(
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {
@@ -404,17 +413,12 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
         },
         child: const Icon(Icons.add),
       ),
+    ),
     );
   }
   Widget userStatus (String userStatus) {
     if (userStatus == 'real') {
-      return Text(
-        'User',
-        style: TextStyle(
-          fontSize: 14,
-          color: Colors.grey[600],
-        ),
-      );
+      return SizedBox.shrink();
     } else {
       return ElevatedButton(
         onPressed: inviteFriend,

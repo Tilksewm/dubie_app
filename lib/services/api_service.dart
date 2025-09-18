@@ -9,11 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../app_constants.dart';
+import '../main.dart';
 import '../models/user.dart';
-import '../models/debt.dart';
-import '../models/comment.dart';
-//import '../models/debt_item.dart';
-//import '../models/home_user.dart';
 
 class RemoteApiService {
   final SharedPreferences prefs;
@@ -57,6 +54,7 @@ class RemoteApiService {
     await prefs.remove('user_name');
     await prefs.remove('user_phone');
     await prefs.remove('user_username');
+    await prefs.remove('lastSyncedAt');
     // await _secureStorage.delete(key: 'pin');
     // Keep PIN data in secure storage, not cleared on logout
   }
@@ -180,8 +178,7 @@ class RemoteApiService {
         }
       }
       }
-      SyncService syncService = SyncService();
-      syncService.syncData();
+      syncService.startSyncing();
 
     }
     if (kDebugMode) {
@@ -193,17 +190,28 @@ class RemoteApiService {
   }
 
   Future<void> signout() async {
+    print('Signing out...');
     final url = Uri.parse('$baseUrl/auth/signout');
+    print('sign out returned from the api call');
     try {
       await _sendRequest(
             () => _httpClient.post(url, headers: _getHeaders()),
       );
+      print('sign out returned from the api call');
     } catch (e) {
       print('Error during backend signout (expected if token expired/no blacklisting): $e');
     } finally {
+      print('sync data start');
+      syncService.stopSyncing();
+      print('sync data end');
+      print('clearing data');
       await _clearAuthData();
+      print('auth data cleared');
       await localDbService.clearDb();
-      await syncService.syncData();
+      print('local db cleared');
+      //await syncService.syncData();
+      homeProvider.fetchAllHomeData();
+      print('home provider returned');
     }
   }
 

@@ -46,11 +46,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _refreshHomeData() async {
     await Provider.of<HomeProvider>(context, listen: false).fetchAllHomeData();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.isAuthenticated){
-      SyncService syncService = SyncService();
-      syncService.syncData();
-    }
   }
   // New: Method to manually lock the app
   void _lockAppManually() async {
@@ -266,8 +261,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 title: const Text('Logout'),
                 onTap: () async {
                   Navigator.pop(context); // Close the drawer first
-                  await authProvider.logout().then(
-                    await Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => const LoginScreen())));
+                  await authProvider.logout();
+                  await Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => const LoginScreen()));
                 },
               ):
             // The sign in/sign up section

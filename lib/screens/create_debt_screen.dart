@@ -155,66 +155,6 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Borrower Selection (Simplified for now)
-              // In a real app, this would involve searching for users
-              // or selecting from contacts. For now, it uses the initial
-              // borrower or allows manual entry (which implies backend
-              // search/creation when `_selectedBorrowerId` is null).
-              // TextFormField(
-              //   controller: _borrowerNameController,
-              //   decoration: const InputDecoration(
-              //     labelText: 'Borrower Name/Email/Phone',
-              //     border: OutlineInputBorder(),
-              //     hintText: 'e.g., John Doe or john@example.com',
-              //   ),
-              //   readOnly: widget.initialBorrowerId != null, // Make read-only if pre-selected
-              //   validator: (value) {
-              //     if (_selectedBorrowerId == null) {
-              //       return 'Please select or search for a borrower.';
-              //     }
-              //     return null;
-              //   },
-              //   onTap: widget.initialBorrowerId == null
-              //       ? () async {
-              //     // TODO: Implement a proper user search/selection screen
-              //     if (_selectedBorrowerId == null) {
-              //       final result = await showDialog<String>(
-              //         context: context,
-              //         builder: (context) => AlertDialog(
-              //           title: const Text('Enter Borrower ID (for testing)'),
-              //           content: TextField(
-              //             controller: _borrowerNameController, // Using this for input
-              //             decoration: const InputDecoration(hintText: "Enter Name or User ID"),
-              //           ),
-              //           actions: [
-              //             TextButton(
-              //               onPressed: () {
-              //                 Navigator.pop(context);
-              //               },
-              //               child: const Text('Cancel'),
-              //             ),
-              //             ElevatedButton(
-              //               onPressed: () {
-              //                 if (_borrowerNameController.text.isNotEmpty) {
-              //                   _selectedBorrowerId = _borrowerNameController.text; // For testing, assume direct ID or search by name.
-              //                   Navigator.pop(context, _borrowerNameController.text);
-              //                 }
-              //               },
-              //               child: const Text('OK'),
-              //             ),
-              //           ],
-              //         ),
-              //       );
-              //       if (result != null) {
-              //         setState(() {
-              //           _borrowerNameController.text = result; // Display name
-              //         });
-              //       }
-              //     }
-              //   }
-              //       : null,
-              // ),
-              //const SizedBox(height: 16.0),
               TextFormField(
                 controller: _overallDescriptionController,
                 decoration: const InputDecoration(

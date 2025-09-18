@@ -95,12 +95,15 @@ class HomeProvider with ChangeNotifier {
 
   // Call all fetches when needed
   Future<void> fetchAllHomeData() async {
-    await Future.wait([
-      fetchHomeSummary(),
-      fetchCreditors(),
-      fetchBorrowers(),
-    ]);
-    notifyListeners();
+    try{
+      await Future.wait([
+        fetchHomeSummary(),
+        fetchCreditors(),
+        fetchBorrowers(),
+      ]);
+    }finally{
+      notifyListeners();
+    }
   }
 
   Future<User> createPlaceholderUser({required String name, String? phone, String? email, String? username}) async {

@@ -23,6 +23,7 @@ import 'package:dubie_app/screens/pin_lock_screen.dart';
 
 import 'l10n/app_localizations.dart';
 
+late HomeProvider homeProvider;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Initialize Hive once
@@ -55,6 +56,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _authProvider = AuthProvider(widget.prefs);
+    homeProvider = HomeProvider(widget.prefs);
   }
 
   @override
@@ -110,9 +112,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ChangeNotifierProvider<LanguageProvider>(
           create: (_) => LanguageProvider(widget.prefs),
         ),
-        ChangeNotifierProvider<HomeProvider>(
-          create: (_) => HomeProvider(widget.prefs),
-        ),
+        ChangeNotifierProvider<HomeProvider>.value(value: homeProvider),
         ChangeNotifierProvider<DebtProvider>(
           create: (_) => DebtProvider(widget.prefs),
         ),
@@ -151,7 +151,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 auth.startWithNoAuth();
               }else{
                 SyncService syncService = SyncService();
-                syncService.syncData();
+                syncService.startSyncing();
               }
 
               if (auth.isPinEnabled) {

@@ -1,4 +1,5 @@
 import 'package:dubie_app/l10n/app_localizations.dart';
+import 'package:dubie_app/main.dart';
 import 'package:dubie_app/providers/home_provider.dart';
 import 'package:dubie_app/providers/language_provider.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +60,7 @@ class HomeUserCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: InkWell(
-        onTap: () {
+        onTap: () async {
            Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => UserDebtsDetailScreen(
