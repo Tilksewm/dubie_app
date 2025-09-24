@@ -1,4 +1,5 @@
 import 'package:dubie_app/l10n/app_localizations.dart';
+import 'package:dubie_app/main.dart';
 import 'package:dubie_app/providers/language_provider.dart';
 import 'package:dubie_app/screens/auth/login_screen.dart';
 import 'package:dubie_app/screens/pin_lock_screen.dart';
@@ -14,7 +15,10 @@ import 'package:dubie_app/providers/auth_provider.dart';
 import 'package:dubie_app/providers/home_provider.dart';
 import 'package:dubie_app/widgets/home_user_card.dart'; // We will create this
 import 'package:dubie_app/screens/add_user_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // We will create this
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../providers/sync_provider.dart';
+import '../widgets/sync_status_indicator.dart'; // We will create this
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -92,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final authProvider = Provider.of<AuthProvider>(context);
     final homeProvider = context.watch<HomeProvider>();
     final langProvider = Provider.of<LanguageProvider>(context);
+    final syncProvider = Provider.of<SyncProvider>(context);
     final loc = AppLocalizations.of(context)!;
     final user = authProvider.currentUser;
     final bool suggestLogin = (!authProvider.isAuthenticated) && this.suggestLogin;
@@ -106,6 +111,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       appBar: AppBar(
         title: Text(loc.appName),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: SyncStatusIndicator(isSynced: syncProvider.isSynced),
+          ),
           IconButton(
             icon: const Icon(Icons.lock_open),
             onPressed: _lockAppManually,
@@ -260,10 +269,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 leading: const Icon(Icons.logout),
                 title: const Text('Logout'),
                 onTap: () async {
-                  Navigator.pop(context); // Close the drawer first
-                  await authProvider.logout();
-                  await Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => const LoginScreen()));
-                },
+                  await logout(authProvider);
+                  },
               ):
             // The sign in/sign up section
             const Divider(),
@@ -399,7 +406,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           final user = homeProvider.borrowers![index];
                           return HomeUserCard(
                             homeUser: user,
-                            isOwedByMe: true, // They owe me
+                            isOwedByMe: true,
+                            mainUser: authProvider.currentUser!, // They owe me
                           );
                         },
                       ),
@@ -447,7 +455,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           final user = homeProvider.creditors![index];
                           return HomeUserCard(
                             homeUser: user,
-                            isOwedByMe: true, // They owe me
+                            isOwedByMe: true,
+                            mainUser: authProvider.currentUser!, // They owe me
                           );
                         },
                       ),
@@ -461,7 +470,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const AddUserScreen()),
+            MaterialPageRoute(builder: (context) => AddUserScreen(mainUser: user!,)),
           );
           if (result == true) {
             // If a new user was added successfully, refresh the home screen data
@@ -482,6 +491,50 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         return 'Amharic';
       default:
         return code;
+    }
+  }
+
+  Future<void> logout(AuthProvider authProvider) async {
+    final syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    SyncService syncService = SyncService();
+    await syncService.syncData();
+    if (syncProvider.isLoading){
+      CircularProgressIndicator();
+    }else if (syncProvider.isSynced){
+      Navigator.pop(context); // Close the drawer first
+      await authProvider.logout();
+      await Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => const LoginScreen()));
+    }else {
+      showDialog(
+        context: context,
+        builder: (ctx) =>
+            AlertDialog(
+              title: const Text('Syncing Offline data failed'),
+              content: const Text(
+                  'Please connect to the internet to sync offline data. otherwise offline data will be lost.'),
+              actions: [
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(context); // Close the drawer first
+                    await authProvider.logout();
+                    await Navigator.of(context).push(MaterialPageRoute(
+                        builder: (ctx) => const LoginScreen()));
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text('Logout anyway',
+                      style: TextStyle(color: Colors.white)),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await logout(authProvider);
+                  },
+
+                  child: const Text('Try sync and logout'),
+                ),
+              ],
+            ),
+      );
     }
   }
 }

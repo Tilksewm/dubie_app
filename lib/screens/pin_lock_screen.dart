@@ -1,4 +1,5 @@
 // lib/screens/pin_lock_screen.dart
+import 'package:dubie_app/providers/locked_out_timer_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/auth_provider.dart';
@@ -121,17 +122,12 @@ class _PinLockScreenState extends State<PinLockScreen> {
                   }),
                 ),
                 const SizedBox(height: 20),
-                if (_errorMessage.isNotEmpty)
-                  Text(
-                    _errorMessage,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
+
                 if (isLockedOut)
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: Text(
-                      'Locked out for ${lockoutRemaining!.inMinutes}m ${lockoutRemaining.inSeconds.remainder(60)}s',
+                      'Locked out for ${authProvider.remaining.inMinutes}m ${authProvider.remaining.inSeconds}s',
                       style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
                     ),
                   ),

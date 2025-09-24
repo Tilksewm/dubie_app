@@ -49,20 +49,24 @@ class SyncService {
 
   Future<void> syncData() async {
     print('sync start');
+    syncProvider.isLoading = true;
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+    // Only proceed with sync if the user is signed in (token exists)
+    if (token == null) {
+      print('User is not signed in. Sync aborted.');
+      syncProvider.isSynced = false;
+      syncProvider.isLoading = false;
+      return;
+    }
     final userBox = await this.userBox;
     final debtBox = await this.debtBox;
     final debtItemBox = await this.debtItemBox;
     final commentBox = await this.commentBox;
     //final metadataBox = await this.metadataBox;
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
 
     print('initialized success');
-    // Only proceed with sync if the user is signed in (token exists)
-    if (token == null) {
-      print('User is not signed in. Sync aborted.');
-      return;
-    }
+
 
     try {
       if(prefs.getString('lastSyncedAt') == null){
@@ -111,13 +115,19 @@ class SyncService {
         print('last synced at updated to ${responseData['serverTime']}');
         print('sync success!!!!');
         homeProvider.fetchAllHomeData();
+        syncProvider.isSynced = true;
+        syncProvider.isLoading = false;
       } else {
         // Handle API errors
         print('Sync failed with status code: ${response.statusCode}. Reason: ${response.body}');
+        syncProvider.isSynced = false;
+        syncProvider.isLoading = false;
       }
     } catch (e) {
       // Handle network or other exceptions
       print('An error occurred during sync: $e');
+      syncProvider.isSynced = false;
+      syncProvider.isLoading = false;
     }
   }
 

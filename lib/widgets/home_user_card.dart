@@ -14,12 +14,14 @@ import '../models/home_user.dart';
 import 'item_list_with_overlap.dart'; // We will create this next
 
 class HomeUserCard extends StatelessWidget {
+  final User mainUser;
   final HomeUser homeUser;
   final bool isOwedByMe; // True if homeUser owes current user, false if current user owes homeUser
   const HomeUserCard({
     super.key,
     required this.homeUser,
     required this.isOwedByMe,
+    required this.mainUser,
   });
   Future<void> inviteFriend() async {
     final message = Uri.encodeComponent(
@@ -65,6 +67,7 @@ class HomeUserCard extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => UserDebtsDetailScreen(
                 otherUserId: homeUser.userId,
+                mainUser: mainUser,
               ),
             ),
           );

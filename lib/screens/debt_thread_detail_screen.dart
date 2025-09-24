@@ -3,6 +3,7 @@
 import 'package:dubie_app/models/debt_item.dart';
 // import 'package:dubie_app/screens/user_debts_detail_screen.dart';
 import 'package:dubie_app/widgets/edit_debt_form.dart';
+import 'package:dubie_app/widgets/new.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -476,6 +477,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                         ),
                                     ],
                                   ),
+                                  if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
                                   PopupMenuButton<String>(
                                     onSelected: (value) {
                                       if (value == 'edit') {
@@ -522,6 +524,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Dubie Items:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
                           ElevatedButton.icon(
                               onPressed: () => _payAllForm(debtThread),
                               icon: Icon(Icons.payments),
@@ -555,7 +558,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                               ),
                               trailing: item.isPaid ?
                                   Text("Paid", style: TextStyle(color: Colors.green, fontSize: 16),):
-                                isCreditor
+                                 ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
                                   ? IconButton(
                                 icon: const Icon(Icons.payment, color: Colors.blue),
                                 onPressed: debtProvider.isActionInProgress
@@ -569,7 +572,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                       const SizedBox(height: 16),
 
                       // Add New Item
-                      if (isCreditor)
+                      if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
                         ElevatedButton.icon(
                           onPressed: debtProvider.isActionInProgress ? null : _showAddItemDialog,
                           icon: const Icon(Icons.add_shopping_cart),
@@ -593,37 +596,41 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                       if (debtProvider.comments != null)
                         ...debtProvider.comments!.map((comment) {
                           return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: Colors.blueGrey,
-                                  child: Text (
-                                    comment.commenterName.substring(0, 1).toUpperCase(),
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        comment.commenterName ?? 'Anonymous',
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                      Text(comment.comment.commentText),
-                                      Text(
-                                        DateFormat.yMMMd().add_jm().format(DateTime.parse(comment.comment.createdAt)),
-                                        style: const TextStyle(fontSize: 10, color: Colors.grey),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                            padding: const EdgeInsets.all(8.0),
+                            child: ChatMessageWidget(
+                              message: comment.comment,
+                              currentUserId: debtProvider.currentUserId!,
+                            )
+                            // Row(
+                            //   crossAxisAlignment: CrossAxisAlignment.start,
+                            //   children: [
+                            //     CircleAvatar(
+                            //       radius: 20,
+                            //       backgroundColor: Colors.blueGrey,
+                            //       child: Text (
+                            //         comment.commenterName.substring(0, 1).toUpperCase(),
+                            //         style: const TextStyle(color: Colors.white),
+                            //       ),
+                            //     ),
+                            //     const SizedBox(width: 8),
+                            //     Expanded(
+                            //       child: Column(
+                            //         crossAxisAlignment: CrossAxisAlignment.start,
+                            //         children: [
+                            //           Text(
+                            //             comment.commenterName ?? 'Anonymous',
+                            //             style: const TextStyle(fontWeight: FontWeight.bold),
+                            //           ),
+                            //           Text(comment.comment.commentText),
+                            //           Text(
+                            //             DateFormat.yMMMd().add_jm().format(DateTime.parse(comment.comment.createdAt)),
+                            //             style: const TextStyle(fontSize: 10, color: Colors.grey),
+                            //           ),
+                            //         ],
+                            //       ),
+                            //     ),
+                            //   ],
+                            // ),
                           );
                         }).toList(),
                     ],

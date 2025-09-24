@@ -24,6 +24,8 @@ class Debt extends HiveObject {
   String createdAt;
   @HiveField(8)
   String updatedAt;
+  @HiveField(9)
+  String? createdBy;
 
   // No DebtItem list here! The relationship is handled by the provider.
 
@@ -37,6 +39,7 @@ class Debt extends HiveObject {
     this.syncStatus = SyncStatus.synced,
     required this.createdAt,
     required this.updatedAt,
+    this.createdBy,
   });
 
   factory Debt.fromJson(Map<String, dynamic> json) => _$DebtFromJson(json);

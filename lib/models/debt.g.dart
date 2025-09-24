@@ -26,13 +26,14 @@ class DebtAdapter extends TypeAdapter<Debt> {
       syncStatus: fields[1] as SyncStatus,
       createdAt: fields[7] as String,
       updatedAt: fields[8] as String,
+      createdBy: fields[9] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Debt obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class DebtAdapter extends TypeAdapter<Debt> {
       ..writeByte(7)
       ..write(obj.createdAt)
       ..writeByte(8)
-      ..write(obj.updatedAt);
+      ..write(obj.updatedAt)
+      ..writeByte(9)
+      ..write(obj.createdBy);
   }
 
   @override
@@ -129,6 +132,7 @@ Debt _$DebtFromJson(Map<String, dynamic> json) => Debt(
               SyncStatus.synced,
       createdAt: json['createdAt'] as String,
       updatedAt: json['updatedAt'] as String,
+      createdBy: json['createdBy'] as String?,
     );
 
 Map<String, dynamic> _$DebtToJson(Debt instance) => <String, dynamic>{
@@ -141,6 +145,7 @@ Map<String, dynamic> _$DebtToJson(Debt instance) => <String, dynamic>{
       'status': instance.status,
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,
+      'createdBy': instance.createdBy,
     };
 
 const _$SyncStatusEnumMap = {

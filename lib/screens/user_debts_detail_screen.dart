@@ -18,11 +18,13 @@ import '../models/user.dart';
 import '../widgets/item_list_without_overlap.dart';
 
 class UserDebtsDetailScreen extends StatefulWidget {
+  final User mainUser;
   final String otherUserId;
 
   const UserDebtsDetailScreen({
     super.key,
     required this.otherUserId,
+    required this.mainUser,
   });
 
   @override
@@ -280,8 +282,8 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                                 final result = await Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => CreateDebtScreen(
-                                      initialBorrowerId: userProvider.currentUser!.id,
-                                      initialBorrowerName: userProvider.currentUser!.name,
+                                      initialBorrower: userProvider.currentUser!,
+                                      initialCreditor: widget.mainUser,
                                     ),
                                   ),
                                 );
@@ -384,9 +386,24 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                             'Status: ${debt.status}', // Use original status field
                             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                           ),
-                          Text(
-                            'Created: ${DateFormat.yMMMd().format(DateTime.parse(debt.createdAt))}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Created: ${DateFormat.yMMMd().format(DateTime.parse(debt.createdAt))}',
+                                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                              ),
+                              if (debt.createdBy != null )
+                                debt.borrowerId == debtProvider.currentUserId ?
+                                  Text(
+                                    'Created By: You',
+                                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                  ):
+                                  Text(
+                                      'Created By: ${userProvider.currentUser!.name}'
+                                  ),
+                            ],
+
                           ),
                           // No last_comment field in original Debt model, so remove if present
                         ],
@@ -402,8 +419,8 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
           final result = await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => CreateDebtScreen(
-                initialBorrowerId: widget.otherUserId,
-                initialBorrowerName: userProvider.currentUser!.name,
+                initialBorrower: userProvider.currentUser!,
+                initialCreditor: widget.mainUser,
               ),
             ),
           );

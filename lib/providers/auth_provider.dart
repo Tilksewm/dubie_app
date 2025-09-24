@@ -1,4 +1,6 @@
 // lib/providers/auth_provider.dart
+import 'dart:async';
+
 import 'package:dubie_app/services/local_db_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,9 +23,12 @@ class AuthProvider with ChangeNotifier {
   int _pinAttempts = 0;
   DateTime? _lastPinAttemptTime;
   final int _maxPinAttempts = 3;
-  final Duration _pinLockoutDuration = const Duration(minutes: 5);
+  final Duration _pinLockoutDuration = const Duration(minutes: 1);
 
   bool _isLoading = true;
+
+  Duration _remaining = Duration.zero;
+  Timer? _timer;
 
   AuthProvider(this.prefs) {
     _apiService = RemoteApiService(prefs);
@@ -37,12 +42,31 @@ class AuthProvider with ChangeNotifier {
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
 
+  Duration get remaining => _remaining;
+
   bool get isPinEnabled => _isPinEnabled;
   bool get isPinLockedOut {
     if (_pinAttempts >= _maxPinAttempts && _lastPinAttemptTime != null) {
+      print(_pinAttempts);
       return DateTime.now().isBefore(_lastPinAttemptTime!.add(_pinLockoutDuration));
     }
     return false;
+  }
+  lockedOut(DateTime startedAt, Duration lockedOutDuration){
+    _remaining = lockedOutDuration - DateTime.now().difference(startedAt);
+    if (_remaining.isNegative) {
+      _remaining = Duration.zero;
+    }
+    if (_timer?.isActive ?? false) return;
+    _timer = Timer.periodic(Duration(seconds: 1), (_) async {
+      _remaining -= const Duration(seconds: 1);
+      if (_remaining.isNegative) {
+        _remaining = Duration.zero;
+        await PinStorage.resetPinAttempts();
+        _timer?.cancel();
+      }
+      notifyListeners();
+    });
   }
 
   Duration? get pinLockoutRemaining {
@@ -168,7 +192,10 @@ class AuthProvider with ChangeNotifier {
       _pinAttempts = await PinStorage.getPinAttempts();
       _lastPinAttemptTime = await PinStorage.getLastPinAttemptTime();
       if (isPinLockedOut) {
-        throw Exception('Incorrect PIN. Maximum attempts reached. Locked for ${_pinLockoutDuration.inMinutes} minutes.');
+        if (_pinAttempts >= _maxPinAttempts && _lastPinAttemptTime != null) {
+          lockedOut(_lastPinAttemptTime!, _pinLockoutDuration);
+        }
+        throw Exception('Incorrect PIN. Maximum attempts reached.');
       } else {
         throw Exception('Incorrect PIN. ${_maxPinAttempts - _pinAttempts} attempts remaining.');
       }

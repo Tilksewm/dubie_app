@@ -148,17 +148,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
-          // Language Settings (Placeholder)
-          ListTile(
-            title: const Text('Language'),
-            subtitle: const Text('English (Default)'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Language settings not yet implemented.')),
-              );
-            },
-          ),
           const Divider(),
 
           // PIN Code Settings

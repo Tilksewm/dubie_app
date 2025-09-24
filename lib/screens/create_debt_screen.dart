@@ -4,16 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/debt_provider.dart';
 import 'package:dubie_app/services/api_service.dart';
-import 'package:uuid/uuid.dart'; // For ApiException
+import 'package:uuid/uuid.dart';
+
+import '../models/user.dart';
+import '../widgets/debt_participant_switch.dart'; // For ApiException
 
 class CreateDebtScreen extends StatefulWidget {
-  final String? initialBorrowerId;
-  final String? initialBorrowerName;
+  final User initialBorrower;
+  final User initialCreditor;
 
   const CreateDebtScreen({
     super.key,
-    this.initialBorrowerId,
-    this.initialBorrowerName,
+    required this.initialBorrower,
+    required this.initialCreditor,
   });
 
   @override
@@ -33,14 +36,28 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
   bool _isLoading = false;
   List<Map<String, dynamic>> _debtItems = [];
 
+  User get initialCreditor => widget.initialCreditor;
+  User get initialBorrower => widget.initialBorrower;
+
+  late String _creditorId;
+  late String _borrowerId;
+
+
   @override
   void initState() {
     super.initState();
-    if (widget.initialBorrowerId != null && widget.initialBorrowerName != null) {
-      _selectedBorrowerId = widget.initialBorrowerId;
-      _selectedBorrowerName = widget.initialBorrowerName;
-      _borrowerNameController.text = widget.initialBorrowerName!;
+    _creditorId = widget.initialCreditor.id;
+    _borrowerId = widget.initialBorrower.id;
+    _selectedBorrowerId = widget.initialBorrower.id;
+    _selectedBorrowerName = widget.initialBorrower.name;
+    _borrowerNameController.text = widget.initialBorrower.name;
     }
+    void onSwitch({required String creditorId, required String borrowerId}) {
+    setState(() {
+      _creditorId = creditorId;
+      _borrowerId = borrowerId;
+    });
+    print('Switched! New Creditor: $_creditorId, New Borrower: $_borrowerId');
   }
 
   void _addItem() {
@@ -79,12 +96,13 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
         final debtProvider = Provider.of<DebtProvider>(context, listen: false);
         Debt newDebt = Debt(
           id: debtId,
-          creditorId: debtProvider.currentUserId!,
-          borrowerId: _selectedBorrowerId!,
+          creditorId: _creditorId,
+          borrowerId: _borrowerId,
           overallDescription: _overallDescriptionController.text,
-          status: "new",
+          status: debtProvider.currentUserId! != _creditorId ? "accepted" : "new",
           createdAt: DateTime.now().toIso8601String(),
           updatedAt: DateTime.now().toIso8601String(),
+          createdBy: debtProvider.currentUserId! != _creditorId ? "borrower" : null,
         );
         await debtProvider.dbService.addDebt(newDebt);
         for (var item in _debtItems) {
@@ -155,6 +173,12 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              DebtParticipantSwitch(
+                  initialGiver: initialCreditor,
+                  initialBorrower: initialBorrower,
+                  onSwitch: onSwitch
+              ),
+              const SizedBox(height: 16.0),
               TextFormField(
                 controller: _overallDescriptionController,
                 decoration: const InputDecoration(

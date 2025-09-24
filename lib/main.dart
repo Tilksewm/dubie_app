@@ -4,6 +4,7 @@ import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/debt_item.dart';
 import 'package:dubie_app/models/user.dart';
 import 'package:dubie_app/providers/language_provider.dart';
+import 'package:dubie_app/providers/sync_provider.dart';
 import 'package:dubie_app/providers/user_provider.dart';
 import 'package:dubie_app/screens/auth/login_screen.dart';
 import 'package:dubie_app/screens/auth/signup_screen.dart';
@@ -24,6 +25,7 @@ import 'package:dubie_app/screens/pin_lock_screen.dart';
 import 'l10n/app_localizations.dart';
 
 late HomeProvider homeProvider;
+late SyncProvider syncProvider;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Initialize Hive once
@@ -57,6 +59,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _authProvider = AuthProvider(widget.prefs);
     homeProvider = HomeProvider(widget.prefs);
+    syncProvider = SyncProvider();
   }
 
   @override
@@ -108,6 +111,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<SyncProvider>.value(value: syncProvider),
         ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
         ChangeNotifierProvider<LanguageProvider>(
           create: (_) => LanguageProvider(widget.prefs),

@@ -1,5 +1,6 @@
 // This file remains the same as provided in the last response,
 // ensuring navigation to UserDebtsDetailScreen after adding a new user.
+import 'package:dubie_app/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/home_provider.dart';
@@ -7,7 +8,12 @@ import 'package:dubie_app/services/api_service.dart';
 import 'package:dubie_app/screens/user_debts_detail_screen.dart'; // Import the detail screen
 
 class AddUserScreen extends StatefulWidget {
-  const AddUserScreen({super.key});
+  final User mainUser;
+
+  const AddUserScreen({
+    super.key,
+    required this.mainUser
+  });
 
   @override
   State<AddUserScreen> createState() => _AddUserScreenState();
@@ -44,6 +50,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
             MaterialPageRoute(
               builder: (context) => UserDebtsDetailScreen(
                 otherUserId: newUser.id,
+                mainUser: widget.mainUser,
                 //totalAmountWithUser: 0.0, // Initial debt is 0.0 with a new user
               ),
             ),
