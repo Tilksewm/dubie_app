@@ -24,10 +24,13 @@ import 'package:dubie_app/screens/pin_lock_screen.dart';
 
 import 'l10n/app_localizations.dart';
 
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 late HomeProvider homeProvider;
 late SyncProvider syncProvider;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   // Initialize Hive once
   await Hive.initFlutter();
   Hive.registerAdapter(SyncStatusAdapter());

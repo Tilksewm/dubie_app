@@ -1,4 +1,6 @@
 // import 'dart:ffi';
+import 'dart:io';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:dubie_app/models/debt_item.dart';
 // import 'package:dubie_app/screens/user_debts_detail_screen.dart';
@@ -38,12 +40,56 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
     decimalDigits: 2,
   );
 
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
+
+  // Use test ad unit IDs. Replace with your own IDs in production.
+  final String _bannerAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/6300978111' // Android test ad unit ID
+      : 'ca-app-pub-3940256099942544/2934735716'; // iOS test ad unit ID
+
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DebtProvider>(context, listen: false).fetchDebtDetails(widget.debtId);
     });
+  }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadBannerAd();
+  }
+  void _loadBannerAd() async {
+    final width = MediaQuery.of(context).size.width.truncate();
+    final AnchoredAdaptiveBannerAdSize? size =
+    await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
+
+    if (size == null) {
+      debugPrint('Failed to get adaptive ad size');
+      return;
+    }
+    _bannerAd = BannerAd(
+      adUnitId: _bannerAdUnitId,
+      request: const AdRequest(),
+      size: size,
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          print('$BannerAd loaded.');
+          setState(() {
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('$BannerAd failedToLoad: $error');
+          ad.dispose();
+        },
+        onAdOpened: (Ad ad) => print('$BannerAd onAdOpened.'),
+        onAdClosed: (Ad ad) => print('$BannerAd onAdClosed.'),
+        onAdImpression: (Ad ad) => print('$BannerAd onAdImpression.'),
+      ),
+    )..load();
   }
 
   void _updateDebt (BuildContext context, DebtThread debtThread){
@@ -584,6 +630,15 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                         ),
                       const SizedBox(height: 24),
 
+                      _bannerAd != null && _isBannerAdLoaded
+                          ? SizedBox(
+                        height: _bannerAd!.size.height.toDouble(),
+                        width: _bannerAd!.size.width.toDouble(),
+                        child: AdWidget(ad: _bannerAd!),
+                      )
+                          : const SizedBox.shrink(), // Placeholder height until ad loads
+
+                      const SizedBox(height: 24),
                       // Comments Section
                       const Text('Comments:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),

@@ -208,24 +208,24 @@ class LocalDbService {
 
       // order debtOwedByUser by recent updatedAt date first
       debtsOwedByUser.sort((a,b) => DateTime.parse(b.updatedAt).compareTo(DateTime.parse(a.updatedAt)));
-      for (var debt in debtsOwedByUser) {
-        print("--- Debt Object ---");
-        // Convert the object to a Map
-        Map<String, dynamic> debtMap = debt.toJson(); // Assuming toJson() exists
-
-        // Iterate over the map and print key-value pairs
-        debtMap.forEach((key, value) {
-          print("$key: $value");
-        });
-        print("--------------------");
-      }
+      // for (var debt in debtsOwedByUser) {
+      //   print("--- Debt Object ---");
+      //   // Convert the object to a Map
+      //   Map<String, dynamic> debtMap = debt.toJson(); // Assuming toJson() exists
+      //
+      //   // Iterate over the map and print key-value pairs
+      //   debtMap.forEach((key, value) {
+      //     print("$key: $value");
+      //   });
+      //   print("--------------------");
+      // }
       // Get unique creditor IDs
       Set<String> creditorIds = debtsOwedByUser.map((debt) => debt.creditorId).toSet();
-      for (var id in creditorIds){
-        print('*************************');
-        print(id);
-        print('*************************');
-      }
+      // for (var id in creditorIds){
+      //   print('*************************');
+      //   print(id);
+      //   print('*************************');
+      // }
 
       List<HomeUser> creditors = [];
       for (var creditorId in creditorIds) {
@@ -253,17 +253,17 @@ class LocalDbService {
           ));
         }
       }
-      for (var homeUser in creditors) {
-        print("--- Debt Object ---");
-        // Convert the object to a Map
-        Map<String, dynamic> userMap = homeUser.toJson(); // Assuming toJson() exists
-
-        // Iterate over the map and print key-value pairs
-        userMap.forEach((key, value) {
-          print("$key: $value");
-        });
-        print("--------------------");
-      }
+      // for (var homeUser in creditors) {
+      //   print("--- Debt Object ---");
+      //   // Convert the object to a Map
+      //   Map<String, dynamic> userMap = homeUser.toJson(); // Assuming toJson() exists
+      //
+      //   // Iterate over the map and print key-value pairs
+      //   userMap.forEach((key, value) {
+      //     print("$key: $value");
+      //   });
+      //   print("--------------------");
+      // }
 
       return creditors;
     } else if (filter == 'borrowers') {
@@ -274,26 +274,26 @@ class LocalDbService {
       List<Debt> debtsOwedToUser = debtBoxInstance.values.where((debt) =>
           debt.creditorId == userId
       ).toList();
-      for (var debt in debtsOwedToUser) {
-        print("--- Debt Object ---");
-        // Convert the object to a Map
-        Map<String, dynamic> debtMap = debt.toJson(); // Assuming toJson() exists
-
-        // Iterate over the map and print key-value pairs
-        debtMap.forEach((key, value) {
-          print("$key: $value");
-        });
-        print("--------------------");
-      }
+      // for (var debt in debtsOwedToUser) {
+      //   print("--- Debt Object ---");
+      //   // Convert the object to a Map
+      //   Map<String, dynamic> debtMap = debt.toJson(); // Assuming toJson() exists
+      //
+      //   // Iterate over the map and print key-value pairs
+      //   debtMap.forEach((key, value) {
+      //     print("$key: $value");
+      //   });
+      //   print("--------------------");
+      // }
       // order debtOwedToUser by recent updatedAt date first
       debtsOwedToUser.sort((a,b) => DateTime.parse(b.updatedAt).compareTo(DateTime.parse(a.updatedAt)));
       // Get unique creditor IDs
       Set<String> borrowerIds = debtsOwedToUser.map((debt) => debt.borrowerId).toSet();
-      for (var id in borrowerIds){
-        print('*************************');
-        print(id);
-        print('*************************');
-      }
+      // for (var id in borrowerIds){
+      //   print('*************************');
+      //   print(id);
+      //   print('*************************');
+      // }
       List<HomeUser> borrowers = [];
       for (var borrowerId in borrowerIds) {
         User? user = userBoxInstance.get(borrowerId);
@@ -320,27 +320,27 @@ class LocalDbService {
           ));
         }
       }
-      for (var homeUser in borrowers) {
-        print("--- Debt Object ---");
-        // Convert the object to a Map
-        Map<String, dynamic> userMap = homeUser.toJson(); // Assuming toJson() exists
-
-        // Iterate over the map and print key-value pairs
-        userMap.forEach((key, value) {
-          print("$key: $value");
-        });
-        print("--------------------");
-      }
-      for (var user in userBoxInstance.values){
-        print('========================================');
-        Map<String, dynamic> userMap = user.toJson(); // Assuming toJson() exists
-
-        // Iterate over the map and print key-value pairs
-        userMap.forEach((key, value) {
-          print("$key: $value");
-        });
-        print('========================================');
-      }
+      // for (var homeUser in borrowers) {
+      //   print("--- Debt Object ---");
+      //   // Convert the object to a Map
+      //   Map<String, dynamic> userMap = homeUser.toJson(); // Assuming toJson() exists
+      //
+      //   // Iterate over the map and print key-value pairs
+      //   userMap.forEach((key, value) {
+      //     print("$key: $value");
+      //   });
+      //   print("--------------------");
+      // }
+      // for (var user in userBoxInstance.values){
+      //   print('========================================');
+      //   Map<String, dynamic> userMap = user.toJson(); // Assuming toJson() exists
+      //
+      //   // Iterate over the map and print key-value pairs
+      //   userMap.forEach((key, value) {
+      //     print("$key: $value");
+      //   });
+      //   print('========================================');
+      // }
       return borrowers;
     }
     return null;

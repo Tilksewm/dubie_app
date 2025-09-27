@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/main.dart';
 import 'package:dubie_app/providers/language_provider.dart';
@@ -8,6 +10,7 @@ import 'package:dubie_app/screens/settings_screen.dart';
 import 'package:dubie_app/screens/signin_suggestion_card.dart';
 import 'package:dubie_app/services/sync_service.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // For number formatting
 
@@ -31,6 +34,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool suggestLogin = false;
   late TabController _tabController;
 
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
+
+  // Use test ad unit IDs. Replace with your own IDs in production.
+  final String _bannerAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/6300978111' // Android test ad unit ID
+      : 'ca-app-pub-3940256099942544/2934735716'; // iOS test ad unit ID
+
   @override
   void initState() {
     super.initState();
@@ -41,10 +52,47 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       await Provider.of<HomeProvider>(context, listen: false).fetchAllHomeData();
     });
   }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() async{
+    final width = MediaQuery.of(context).size.width.truncate();
+    final AnchoredAdaptiveBannerAdSize? size =
+    await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
+
+    if (size == null) {
+      debugPrint('Failed to get adaptive ad size');
+      return;
+    }
+    _bannerAd = BannerAd(
+      adUnitId: _bannerAdUnitId,
+      request: const AdRequest(),
+      size: size,
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          print('$BannerAd loaded.');
+          setState(() {
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('$BannerAd failedToLoad: $error');
+          ad.dispose();
+        },
+        onAdOpened: (Ad ad) => print('$BannerAd onAdOpened.'),
+        onAdClosed: (Ad ad) => print('$BannerAd onAdClosed.'),
+        onAdImpression: (Ad ad) => print('$BannerAd onAdImpression.'),
+      ),
+    )..load();
+  }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -455,8 +503,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           final user = homeProvider.creditors![index];
                           return HomeUserCard(
                             homeUser: user,
-                            isOwedByMe: true,
-                            mainUser: authProvider.currentUser!, // They owe me
+                            isOwedByMe: false, // This should likely be false for the "You Owe" tab
+                            mainUser: authProvider.currentUser!, // User owes them
                           );
                         },
                       ),
@@ -480,6 +528,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         child: const Icon(Icons.person_add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: _bannerAd != null && _isBannerAdLoaded
+          ? SizedBox(
+              height: _bannerAd!.size.height.toDouble(),
+              width: _bannerAd!.size.width.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            )
+          : const SizedBox.shrink(), // Placeholder height until ad loads
     );
   }
 
@@ -499,7 +554,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     SyncService syncService = SyncService();
     await syncService.syncData();
     if (syncProvider.isLoading){
-      CircularProgressIndicator();
+      const CircularProgressIndicator(); // This will not be visible here, consider a dialog or snackbar
     }else if (syncProvider.isSynced){
       Navigator.pop(context); // Close the drawer first
       await authProvider.logout();
@@ -515,7 +570,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               actions: [
                 ElevatedButton(
                   onPressed: () async {
-                    Navigator.pop(context); // Close the drawer first
+                    Navigator.pop(ctx); // Close the dialog
+                    Navigator.pop(context); // Close the drawer
                     await authProvider.logout();
                     await Navigator.of(context).push(MaterialPageRoute(
                         builder: (ctx) => const LoginScreen()));
@@ -526,10 +582,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 TextButton(
                   onPressed: () async {
-                    Navigator.pop(context);
+                    Navigator.pop(ctx); // Close the dialog
                     await logout(authProvider);
                   },
-
                   child: const Text('Try sync and logout'),
                 ),
               ],
