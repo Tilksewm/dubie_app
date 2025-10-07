@@ -1,10 +1,6 @@
 import 'package:dubie_app/l10n/app_localizations.dart';
-import 'package:dubie_app/main.dart';
-import 'package:dubie_app/providers/home_provider.dart';
-import 'package:dubie_app/providers/language_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // For number formatting
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dubie_app/models/user.dart';
 import 'package:dubie_app/screens/user_debts_detail_screen.dart';
@@ -87,7 +83,7 @@ class HomeUserCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          homeUser.name ?? 'Unknown User',
+                          homeUser.name ?? loc.unknownUser,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -115,7 +111,7 @@ class HomeUserCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      userStatus(homeUser.type),
+                      userStatus(homeUser.type, context),
                     ],
                   ),
                 ],
@@ -126,10 +122,11 @@ class HomeUserCard extends StatelessWidget {
       ),
     );
   }
-  Widget userStatus( String userStatus) {
+  Widget userStatus( String userStatus, BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     if (userStatus == 'real') {
       return Text(
-        'User',
+        loc.user,
         style: TextStyle(
           fontSize: 14,
           color: Colors.green,
@@ -139,7 +136,7 @@ class HomeUserCard extends StatelessWidget {
       return ElevatedButton(
         onPressed: inviteFriend,
         child: Text(
-          'Invite',
+          loc.invite,
           style: TextStyle(
             fontSize: 14,
             color: Colors.green,

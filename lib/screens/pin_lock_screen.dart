@@ -1,5 +1,5 @@
 // lib/screens/pin_lock_screen.dart
-import 'package:dubie_app/providers/locked_out_timer_provider.dart';
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/auth_provider.dart';
@@ -80,6 +80,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final authProvider = Provider.of<AuthProvider>(context);
     final bool isLockedOut = authProvider.isPinLockedOut;
     final Duration? lockoutRemaining = authProvider.pinLockoutRemaining;
@@ -88,7 +89,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
       canPop: false, // Prevent popping the PIN screen without successful PIN entry
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.isInitialSetup ? 'Set PIN' : 'Enter PIN'),
+          title: Text(widget.isInitialSetup ? loc.setPin : loc.enterPin),
           automaticallyImplyLeading: false, // No back button on PIN screen
         ),
         body: Center(
@@ -98,7 +99,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  widget.isInitialSetup ? 'Create your 4-digit PIN' : 'Enter your 4-digit PIN',
+                  widget.isInitialSetup ? loc.createYourPin : loc.enterYourPin,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 40),
@@ -127,7 +128,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: Text(
-                      'Locked out for ${authProvider.remaining.inMinutes}m ${authProvider.remaining.inSeconds}s',
+                      '${loc.lockedOutFor} ${authProvider.remaining.inMinutes}m ${authProvider.remaining.inSeconds}s',
                       style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
                     ),
                   ),

@@ -1,3 +1,4 @@
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/debt_item.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,7 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
   String? _selectedBorrowerName;// The actual ID of the borrower
 
   bool _isLoading = false;
-  List<Map<String, dynamic>> _debtItems = [];
+  final List<Map<String, dynamic>> _debtItems = [];
 
   User get initialCreditor => widget.initialCreditor;
   User get initialBorrower => widget.initialBorrower;
@@ -61,9 +62,10 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
   }
 
   void _addItem() {
+    final loc = AppLocalizations.of(context)!;
     if (_itemDescriptionController.text.isEmpty || _itemPriceController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter item description and price.')),
+        SnackBar(content: Text(loc.enterItemDescriptionAndPrice)),
       );
       return;
     }
@@ -71,7 +73,7 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
     final double? price = double.tryParse(_itemPriceController.text);
     if (price == null || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid positive price.')),
+        SnackBar(content: Text(loc.enterValidPositivePrice)),
       );
       return;
     }
@@ -87,6 +89,7 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
   }
 
   Future<void> _createDebt() async {
+    final loc = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate() && _selectedBorrowerId != null && _debtItems.isNotEmpty) {
       setState(() {
         _isLoading = true;
@@ -119,20 +122,20 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Debt "${newDebt.id}" created successfully!')),
+            SnackBar(content: Text(loc.debtCreatedSuccessfully)),
           );
           Navigator.of(context).pop(true); // Pop with true to indicate success
         }
       } on ApiException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to create debt: ${e.message}')),
+            SnackBar(content: Text(loc.failedToCreateDebt)),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('An unexpected error occurred.')),
+            SnackBar(content: Text(loc.somethingWentWrong)),
           );
         }
       } finally {
@@ -146,7 +149,7 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
       );
     } else if (_debtItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one debt item.')),
+        SnackBar(content: Text(loc.addAtListOneItem)),
       );
     }
   }
@@ -162,9 +165,10 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create New Dubie'),
+        title: Text(loc.createNewDubie),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -181,14 +185,14 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _overallDescriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Overall Description (Optional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.overallDescriptionOptional,
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 2,
               ),
               const SizedBox(height: 24.0),
-              const Text('Add Dubie Items:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(loc.addDubieItems, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
               Row(
                 children: [
@@ -196,9 +200,9 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
                     flex: 3,
                     child: TextFormField(
                       controller: _itemDescriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Item Description',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: loc.itemDescription,
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                   ),
@@ -207,9 +211,9 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
                     flex: 2,
                     child: TextFormField(
                       controller: _itemPriceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Price',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: loc.price,
+                        border: const OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                     ),
@@ -230,7 +234,7 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: ListTile(
                       title: Text(item['description']),
-                      trailing: Text('ETB ${item['price'].toStringAsFixed(2)}'),
+                      trailing: Text('${loc.etb} ${item['price'].toStringAsFixed(2)}'),
                       leading: IconButton(
                         icon: const Icon(Icons.remove_circle, color: Colors.red),
                         onPressed: () {
@@ -241,7 +245,7 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               const SizedBox(height: 24.0),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -250,7 +254,7 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: const Text('Create Dubie', style: TextStyle(fontSize: 18)),
+                child: Text(loc.createDubie, style: const TextStyle(fontSize: 18)),
               ),
             ],
           ),

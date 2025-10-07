@@ -6,10 +6,8 @@ import 'package:dubie_app/models/comment.dart';
 import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/debt_item.dart';
 import 'package:dubie_app/models/user.dart';
-import 'package:dubie_app/providers/home_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Your model classes with toJson and fromJson factories

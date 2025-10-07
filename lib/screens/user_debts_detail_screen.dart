@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:dubie_app/app_constants.dart';
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:dubie_app/main.dart';
@@ -45,12 +47,6 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
 
-  // Use test ad unit IDs. Replace with your own IDs in production.
-  final String _bannerAdUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/6300978111' // Android test ad unit ID
-      : 'ca-app-pub-3940256099942544/2934735716'; // iOS test ad unit ID
-
-
   @override
   void initState() {
     super.initState();
@@ -75,19 +71,23 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
       return;
     }
     _bannerAd = BannerAd(
-      adUnitId: _bannerAdUnitId,
+      adUnitId: AppConstants.bannerAdUnitId,
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(
         onAdLoaded: (Ad ad) {
           print('$BannerAd loaded.');
           setState(() {
+            _bannerAd = ad as BannerAd;
             _isBannerAdLoaded = true;
           });
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           print('$BannerAd failedToLoad: $error');
           ad.dispose();
+          setState(() {
+            _isBannerAdLoaded = false;
+          });
         },
         onAdOpened: (Ad ad) => print('$BannerAd onAdOpened.'),
         onAdClosed: (Ad ad) => print('$BannerAd onAdClosed.'),
@@ -118,6 +118,11 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     if (parts.length == 1) return parts[0][0].toUpperCase();
     return "${parts[0][0].toUpperCase()}${parts[1][0].toUpperCase()}";
   }
+   @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
 
 
   // Future<void> inviteFriend() async {
@@ -137,6 +142,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final debtProvider = Provider.of<DebtProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
     if(userProvider.currentUser == null || debtProvider.debtsWithUser == null){
@@ -156,11 +162,15 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     }
     totalAmountWithUser = totalCreditAmount - totalBorrowAmount;
 
-    return WillPopScope(
-        onWillPop: () async {
-          if (shouldHomeRefresh) await homeProvider.fetchAllHomeData();
-        // return true to allow pop, false to block it
-        return true;
+    return PopScope<bool>(
+      canPop: false, // prevents the default back action
+      onPopInvokedWithResult: (bool didPop, bool? result) {
+        if (didPop) {
+          return; // Pop already occurred
+        }
+        if (shouldHomeRefresh) homeProvider.fetchAllHomeData();
+        // Manually pop with the correct value
+        Navigator.of(context).pop(shouldHomeRefresh);
     },
     child: Scaffold(
       appBar: AppBar(
@@ -249,7 +259,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                                 onPressed: () {
                                   Navigator.of(ctx).pop(); // Close dialog
                                 },
-                                child: const Text('Close'),
+                                child: Text(loc.close),
                               ),
                               ElevatedButton(
                                 onPressed: () async {
@@ -262,7 +272,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                                   userProvider.getUserById(
                                       userProvider.currentUser!.id);
                                 },
-                                child: const Text('Edit'),
+                                child: Text(loc.edit),
                               ),
                             ],
                           ) :
@@ -270,7 +280,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                             onPressed: () {
                               Navigator.of(ctx).pop(); // Close dialog
                             },
-                            child: const Text('Close'),
+                            child: Text(loc.close),
                           ),
                         ],
                       );
@@ -281,9 +291,9 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(userProvider.currentUser!.name ?? 'Debt Details', style: const TextStyle(fontSize: 18)),
+              Text(userProvider.currentUser!.name, style: const TextStyle(fontSize: 18)),
               Text(
-                'Total: ${currencyFormatter.format(totalAmountWithUser)}',
+                '${loc.total}: ${currencyFormatter.format(totalAmountWithUser)}',
                 style: const TextStyle(fontSize: 14, color: Colors.white70),
               ),
             ],
@@ -308,7 +318,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
           debtProvider.debtsWithUserError != null?
             RefreshIndicator(
               onRefresh: _refreshDebts,
-              child: Text('Error: ${debtProvider.debtsWithUserError}'),
+              child: Text('${loc.error}: ${debtProvider.debtsWithUserError}'),
             )
           :
           debtProvider.debtsWithUser == null || debtProvider.debtsWithUser!.isEmpty?
@@ -323,7 +333,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('No debt threads found with ${userProvider.currentUser!.name ?? "this user"}.'),
+                            Text(loc.noDebtThreadFoundWith (userProvider.currentUser!.name)),
                             const SizedBox(height: 20),
                             ElevatedButton.icon(
                               onPressed: () async {
@@ -340,7 +350,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                                 }
                               },
                               icon: const Icon(Icons.add),
-                              label: const Text('Start New Dubie'),
+                              label: Text(loc.startNewDubie),
                             ),
                           ],
                         ),
@@ -356,10 +366,10 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
             child: ListView.builder(
               itemCount: debtProvider.debtsWithUser!.length,
               itemBuilder: (context, index) {
-                if (kDebugMode) {
-                  print("Rendering index $index");
-                  print(debtProvider.debtsWithUser!.map((d) => d.debt.id).toList());
-                }
+                // if (kDebugMode) {
+                //   print("Rendering index $index");
+                //   print(debtProvider.debtsWithUser!.map((d) => d.debt.id).toList());
+                // }
                 final debtThread = debtProvider.debtsWithUser![index];
                 final debt = debtThread.debt;
                 // Determine direction from the perspective of the *current user*
@@ -368,7 +378,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                 String amountPrefix = isCreditorForThisDebtThread ? '+' : '-';
                 String debtAmount = '';
                 if(debtThread.outstandingAmount == 0){
-                  debtAmount = 'Paid';
+                  debtAmount = loc.paid;
                 }else{
                   debtAmount = '$amountPrefix${currencyFormatter.format((debtThread.outstandingAmount ?? 0.0).abs())}';
                 }
@@ -387,8 +397,10 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                           ),
                         ),
                       );
-                        debtProvider.fetchDebtsWithUser(userProvider.currentUser!.id);
-                        context.read<HomeProvider>().fetchAllHomeData();
+                      if (result == true) {
+                        _refreshDebts(); // Refresh if something changed in the debt thread
+                        shouldHomeRefresh = true;
+                      }
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -400,7 +412,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  debt.overallDescription ?? 'Debt Thread',
+                                  debt.overallDescription ?? loc.debtThread,
                                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -421,7 +433,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                           ),
 
                           // Display items related to this debt thread
-                          if (debtThread.items != null && debtThread.items.isNotEmpty) ...[
+                          if (debtThread.items.isNotEmpty) ...[
                             // Text(
                             //   'Items: ${debt.items!.map((e) => e.description).join(', ')}',
                             //   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -431,24 +443,24 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
 
                           ],
                           Text(
-                            'Status: ${debt.status}', // Use original status field
+                            '${loc.status}: ${debt.status}', // Use original status field
                             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Created: ${DateFormat.yMMMd().format(DateTime.parse(debt.createdAt))}',
+                                '${loc.createdAt}: ${DateFormat.yMMMd().format(DateTime.parse(debt.createdAt))}',
                                 style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                               ),
                               if (debt.createdBy != null )
                                 debt.borrowerId == debtProvider.currentUserId ?
                                   Text(
-                                    'Created By: You',
+                                    loc.createdByYou,
                                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                                   ):
                                   Text(
-                                      'Created By: ${userProvider.currentUser!.name}'
+                                      loc.createdBy(userProvider.currentUser!.name),
                                   ),
                             ],
 
@@ -474,6 +486,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
           );
           if (result == true) {
             _refreshDebts(); // Refresh if a new debt was created
+            shouldHomeRefresh = true;
           }
         },
         child: const Icon(Icons.add),
@@ -489,13 +502,14 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     );
   }
   Widget userStatus (String userStatus) {
+    final loc = AppLocalizations.of(context)!;
     if (userStatus == 'real') {
       return SizedBox.shrink();
     } else {
       return ElevatedButton(
         onPressed: inviteFriend,
         child: Text(
-          'Invite',
+          loc.invite,
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey[600],

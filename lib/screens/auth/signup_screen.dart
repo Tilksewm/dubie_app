@@ -1,4 +1,5 @@
 // lib/screens/signup_screen.dart
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/auth_provider.dart';
@@ -33,6 +34,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _signup() async {
+    final loc = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -51,7 +53,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registration successful! Please check your email for verification before logging in.')),
+            SnackBar(content: Text(loc.signupSuccess)),
           );
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -71,9 +73,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign Up'),
+        title: Text(loc.signup),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -84,20 +87,20 @@ class _SignupScreenState extends State<SignupScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Create Your Account',
+                  loc.createAccount,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 30),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                  decoration: InputDecoration(
+                    labelText: loc.fullName,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.person),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your full name';
+                      return loc.enterYourFullName;
                     }
                     return null;
                   },
@@ -105,18 +108,18 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                  decoration: InputDecoration(
+                    labelText: loc.email,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.email),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
+                      return loc.enterYourEmail;
                     }
                     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Please enter a valid email address';
+                      return loc.enterValidEmail;
                     }
                     return null;
                   },
@@ -124,18 +127,18 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                  decoration: InputDecoration(
+                    labelText: loc.password,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
                   ),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
+                      return loc.enterYourPassword;
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters long';
+                      return loc.passwordMinLength;
                     }
                     return null;
                   },
@@ -143,21 +146,27 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Username (Optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.account_circle),
+                  decoration: InputDecoration(
+                    labelText: loc.usernameOptional,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.account_circle),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone (Optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone),
+                  decoration: InputDecoration(
+                    labelText: loc.phoneOptional,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.phone),
                   ),
                   keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty && !RegExp(r'^\+[0-9]{7,15}$').hasMatch(value)) {
+                      return loc.enterValidPhoneWithCountryCode;
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
                 if (_errorMessage != null)
@@ -176,14 +185,14 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text('Sign Up'),
+                  child: Text(loc.signup),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop(); // Go back to Login
                   },
-                  child: const Text('Already have an account? Log In'),
+                  child: Text(loc.alreadyHaveAccount),
                 ),
               ],
             ),

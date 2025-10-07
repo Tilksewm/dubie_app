@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:dubie_app/app_constants.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
-import 'package:dubie_app/main.dart';
 import 'package:dubie_app/providers/language_provider.dart';
 import 'package:dubie_app/screens/auth/login_screen.dart';
 import 'package:dubie_app/screens/pin_lock_screen.dart';
@@ -37,11 +37,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
 
-  // Use test ad unit IDs. Replace with your own IDs in production.
-  final String _bannerAdUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/6300978111' // Android test ad unit ID
-      : 'ca-app-pub-3940256099942544/2934735716'; // iOS test ad unit ID
-
   @override
   void initState() {
     super.initState();
@@ -58,29 +53,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _loadBannerAd();
   }
 
-  void _loadBannerAd() async{
+  void _loadBannerAd() async {
     final width = MediaQuery.of(context).size.width.truncate();
     final AnchoredAdaptiveBannerAdSize? size =
-    await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
+        await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
 
     if (size == null) {
       debugPrint('Failed to get adaptive ad size');
       return;
     }
     _bannerAd = BannerAd(
-      adUnitId: _bannerAdUnitId,
+      adUnitId: AppConstants.bannerAdUnitId,
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(
         onAdLoaded: (Ad ad) {
           print('$BannerAd loaded.');
           setState(() {
+            _bannerAd = ad as BannerAd;
             _isBannerAdLoaded = true;
           });
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           print('$BannerAd failedToLoad: $error');
           ad.dispose();
+          setState(() {
+            _isBannerAdLoaded = false;
+          });
         },
         onAdOpened: (Ad ad) => print('$BannerAd onAdOpened.'),
         onAdClosed: (Ad ad) => print('$BannerAd onAdClosed.'),
@@ -88,6 +87,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     )..load();
   }
+
 
   @override
   void dispose() {
@@ -101,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
   // New: Method to manually lock the app
   void _lockAppManually() async {
+    final loc = AppLocalizations.of(context)!;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.isPinEnabled) {
       Navigator.of(context).push(
@@ -121,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         )
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PIN lock is not enabled.')),
+        SnackBar(content: Text(loc.enablePinInSettings)),
       );
     }
   }
@@ -166,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           IconButton(
             icon: const Icon(Icons.lock_open),
             onPressed: _lockAppManually,
-            tooltip: 'Lock App',
+            tooltip: loc.lockApp,
           ),
         ],
       ),
@@ -175,8 +176,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           padding: EdgeInsets.zero,
           children: <Widget>[
             UserAccountsDrawerHeader(
-              accountName: Text(user?.name ?? 'Guest User'),
-              accountEmail: Text(user?.email ?? 'No Email'),
+              accountName: Text(user?.name ?? loc.guestUser),
+              accountEmail: Text(user?.email ?? loc.noEmail),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Text(
@@ -190,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             ListTile(
               leading: const Icon(Icons.person),
-              title: const Text('Profile'),
+              title: Text(loc.profile),
               onTap: () {
                 Navigator.pop(context); // Close the drawer
                 showDialog(
@@ -264,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         onPressed: () {
                           Navigator.of(ctx).pop(); // Close dialog
                         },
-                        child: const Text('Close'),
+                        child: Text(loc.close),
                       ),
                       ElevatedButton(
                         onPressed: () async {
@@ -275,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           // Refresh profile data in drawer after editing
                           authProvider.refreshProfileData();
                         },
-                        child: const Text('Edit'),
+                        child: Text(loc.edit),
                       ),
                     ],
                   ),
@@ -284,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             ListTile(
               leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
+              title: Text(loc.settings),
               onTap: () {
                 Navigator.pop(context); // Close the drawer
                 Navigator.of(context).push(
@@ -294,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             ListTile(
               leading: const Icon(Icons.language),
-              title: const Text('Language'),
+              title: Text(loc.language),
               trailing: DropdownButton<Locale>(
                 value: langProvider.locale,
                   items: AppLocalizations.supportedLocales.map((locale) {
@@ -315,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             authProvider.isAuthenticated ?
               ListTile(
                 leading: const Icon(Icons.logout),
-                title: const Text('Logout'),
+                title: Text(loc.logout),
                 onTap: () async {
                   await logout(authProvider);
                   },
@@ -327,8 +328,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text(
-                    'Sign in to sync your data and get personalized content.',
+                  Text(
+                    loc.signinSuggestion,
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14.0),
                   ),
@@ -348,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           )
                       );
                     },
-                    child: const Text('Sign In / Sign Up'),
+                    child: Text(loc.signinSignup),
                   ),
                 ],
               ),
@@ -363,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               : homeProvider.summaryError != null
               ? RefreshIndicator(
                   onRefresh: _refreshHomeData,
-                  child: Center(child: Text('Error: ${homeProvider.summaryError}')),
+                  child: Center(child: Text('${loc.error}: ${homeProvider.summaryError}')),
               )
               :
           // Home Summary Cards
@@ -374,7 +375,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child:
                 Column(
                   children: [
-                    Text('You Lent', style: TextStyle(fontSize: 14)),
+                    Text(loc.youLent, style: TextStyle(fontSize: 14)),
                     const SizedBox(height: 4),
                     Text(
                       currencyFormatter.format(homeProvider.homeSummary?['lent'] ?? 0.0),
@@ -387,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child:// Borrowers (users who owe current user)
                 Column(
                   children: [
-                    Text('You Borrow', style: TextStyle(fontSize: 14)),
+                    Text(loc.youBorrow, style: TextStyle(fontSize: 14)),
                     const SizedBox(height: 4),
                     Text(
                       currencyFormatter.format(homeProvider.homeSummary?['borrow'] ?? 0.0),
@@ -423,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           children: [
                             ConstrainedBox (
                                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                                child: Center( child: Text('Error: ${homeProvider.borrowersError}'))
+                                child: Center( child: Text('${loc.error}: ${homeProvider.borrowersError}'))
                             )
                           ],
                         );
@@ -438,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             children: [
                               ConstrainedBox (
                                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                                child: Center( child: Text('No one currently owes you money.'))
+                                child: Center( child: Text(loc.noLent))
                               )
                             ],
                           );
@@ -473,7 +474,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           children: [
                             ConstrainedBox (
                                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                                child: Center( child: Text('Error: ${homeProvider.creditorsError}'))
+                                child: Center( child: Text('${loc.error}: ${homeProvider.creditorsError}'))
                             )
                           ],
                         );
@@ -488,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           children: [
                             ConstrainedBox (
                                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                                child: Center( child: Text('No one currently you owes money.'))
+                                child: Center( child: Text(loc.noBorrow))
                             )
                           ],
                         );
@@ -550,6 +551,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> logout(AuthProvider authProvider) async {
+    final loc = AppLocalizations.of(context)!;
     final syncProvider = Provider.of<SyncProvider>(context, listen: false);
     SyncService syncService = SyncService();
     await syncService.syncData();
@@ -564,9 +566,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         context: context,
         builder: (ctx) =>
             AlertDialog(
-              title: const Text('Syncing Offline data failed'),
-              content: const Text(
-                  'Please connect to the internet to sync offline data. otherwise offline data will be lost.'),
+              title: Text(loc.syncFailed),
+              content: Text(
+                  loc.onLogoutSyncFailedMessage),
               actions: [
                 ElevatedButton(
                   onPressed: () async {
@@ -577,15 +579,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         builder: (ctx) => const LoginScreen()));
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: const Text('Logout anyway',
-                      style: TextStyle(color: Colors.white)),
+                  child: Text(loc.logoutAnyway,
+                      style: const TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   onPressed: () async {
                     Navigator.pop(ctx); // Close the dialog
                     await logout(authProvider);
                   },
-                  child: const Text('Try sync and logout'),
+                  child: Text(loc.trySyncAgain),
                 ),
               ],
             ),

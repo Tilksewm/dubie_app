@@ -1,9 +1,10 @@
 // lib/screens/settings_screen.dart
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/auth_provider.dart';
 import 'package:dubie_app/screens/pin_lock_screen.dart'; // For initial PIN setup
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // For testing PIN existence
+// For testing PIN existence
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -26,6 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showSetPinDialog(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     showDialog(
       context: context,
@@ -44,7 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPinVerified: () {
                 Navigator.of(ctx).pop(); // Pop PIN dialog
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('PIN set successfully!')),
+                  SnackBar(content: Text('${loc.pinSetSuccessfully}!')),
                 );
               },
             ),
@@ -55,32 +57,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showChangePinDialog(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Change PIN'),
+        title: Text(loc.changePin),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _currentPinController,
-                decoration: const InputDecoration(labelText: 'Current PIN'),
+                decoration: InputDecoration(labelText: loc.currentPin),
                 keyboardType: TextInputType.number,
                 obscureText: true,
                 maxLength: 4,
               ),
               TextField(
                 controller: _newPinController,
-                decoration: const InputDecoration(labelText: 'New PIN (4 digits)'),
+                decoration: InputDecoration(labelText: loc.newPin),
                 keyboardType: TextInputType.number,
                 obscureText: true,
                 maxLength: 4,
               ),
               TextField(
                 controller: _confirmNewPinController,
-                decoration: const InputDecoration(labelText: 'Confirm New PIN'),
+                decoration: InputDecoration(labelText: loc.confirmNewPin),
                 keyboardType: TextInputType.number,
                 obscureText: true,
                 maxLength: 4,
@@ -96,19 +99,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _newPinController.clear();
               _confirmNewPinController.clear();
             },
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               if (_newPinController.text != _confirmNewPinController.text) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('New PINs do not match!')),
+                  SnackBar(content: Text('${loc.pinsDoNotMatch}!')),
                 );
                 return;
               }
               if (_newPinController.text.length != 4) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('New PIN must be 4 digits!')),
+                  SnackBar(content: Text('${loc.newPinMustBe4Digits}!')),
                 );
                 return;
               }
@@ -118,12 +121,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (mounted) {
                   Navigator.of(ctx).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('PIN changed successfully!')),
+                    SnackBar(content: Text('${loc.pinChangedSuccessfully}!')),
                   );
                 }
               } catch (e) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                  SnackBar(content: Text(loc.somethingWentWrong/*e.toString().replaceFirst('Exception: ', '')*/)),
                 );
               } finally {
                 _currentPinController.clear();
@@ -131,7 +134,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _confirmNewPinController.clear();
               }
             },
-            child: const Text('Change PIN'),
+            child: Text(loc.changePinBtn),
           ),
         ],
       ),
@@ -140,11 +143,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(loc.settings),
       ),
       body: ListView(
         children: [
@@ -154,12 +158,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
-              'PIN Code Settings',
+              loc.pinCodeSettings,
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
           SwitchListTile(
-            title: const Text('Enable PIN Lock'),
+            title: Text(loc.enablePinLock),
             value: authProvider.isPinEnabled,
             onChanged: (bool value) async {
               if (value) {
@@ -171,69 +175,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // For simplicity, directly disable. For security, might ask for current PIN first.
                   await authProvider.disablePin();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('PIN lock disabled.')),
+                    SnackBar(content: Text(loc.pinLockedDisabled)),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to disable PIN: $e')),
+                    SnackBar(content: Text(loc.failedToDisablePin)),
                   );
                 }
               }
             },
           ),
           ListTile(
-            title: const Text('Change PIN'),
+            title: Text(loc.changePin),
             enabled: authProvider.isPinEnabled, // Only enabled if PIN is set
             onTap: authProvider.isPinEnabled ? () => _showChangePinDialog(context) : null,
             trailing: const Icon(Icons.arrow_forward_ios),
           ),
           // Add a simple button to delete account (for testing, should be secure in production)
-          const Divider(),
-          ListTile(
-            title: const Text('Delete Account'),
-            leading: const Icon(Icons.delete_forever, color: Colors.red),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Delete Account'),
-                  content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        // Implement delete account logic here
-                        // This usually involves an API call to your backend
-                        // Then log out the user and navigate to login screen
-                        // For now, just log out as a placeholder
-                        try {
-                          // await Provider.of<AuthProvider>(context, listen: false).apiService.deleteAccount(); // Implement this in api_service
-                          await Provider.of<AuthProvider>(context, listen: false).logout();
-                          if (mounted) {
-                            Navigator.of(ctx).pop(); // Pop dialog
-                            Navigator.of(context).pushReplacementNamed('/login');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Account deleted successfully.')),
-                            );
-                          }
-                        } catch (e) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(content: Text('Failed to delete account: $e')),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text('Delete', style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const Divider(),
+          // const Divider(),
+          // ListTile(
+          //   title: const Text('Delete Account'),
+          //   leading: const Icon(Icons.delete_forever, color: Colors.red),
+          //   onTap: () {
+          //     showDialog(
+          //       context: context,
+          //       builder: (ctx) => AlertDialog(
+          //         title: const Text('Delete Account'),
+          //         content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+          //         actions: [
+          //           TextButton(
+          //             onPressed: () => Navigator.of(ctx).pop(),
+          //             child: const Text('Cancel'),
+          //           ),
+          //           ElevatedButton(
+          //             onPressed: () async {
+          //               // Implement delete account logic here
+          //               // This usually involves an API call to your backend
+          //               // Then log out the user and navigate to login screen
+          //               // For now, just log out as a placeholder
+          //               try {
+          //                 // await Provider.of<AuthProvider>(context, listen: false).apiService.deleteAccount(); // Implement this in api_service
+          //                 await Provider.of<AuthProvider>(context, listen: false).logout();
+          //                 if (mounted) {
+          //                   Navigator.of(ctx).pop(); // Pop dialog
+          //                   Navigator.of(context).pushReplacementNamed('/login');
+          //                   ScaffoldMessenger.of(context).showSnackBar(
+          //                     const SnackBar(content: Text('Account deleted successfully.')),
+          //                   );
+          //                 }
+          //               } catch (e) {
+          //                 ScaffoldMessenger.of(ctx).showSnackBar(
+          //                   SnackBar(content: Text('Failed to delete account: $e')),
+          //                 );
+          //               }
+          //             },
+          //             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          //             child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          //           ),
+          //         ],
+          //       ),
+          //     );
+          //   },
+          // ),
+          // const Divider(),
         ],
       ),
     );

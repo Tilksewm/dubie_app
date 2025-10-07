@@ -1,4 +1,5 @@
 // lib/screens/profile_edit_screen.dart
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/auth_provider.dart';
@@ -39,6 +40,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   }
 
   Future<void> _updateProfile() async {
+    final loc = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -56,14 +58,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully!')),
+            SnackBar(content: Text('${loc.profileUpdatedSuccessfully}!')),
           );
           Navigator.of(context).pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update profile: ${e.toString().replaceFirst('ApiException: ', '')}')),
+            SnackBar(content: Text(loc.failedToUpdateProfile)),
           );
         }
       } finally {
@@ -76,9 +78,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(loc.editProfile),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -92,7 +95,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 decoration: const InputDecoration(labelText: 'Full Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Name cannot be empty';
+                    return loc.nameCannotBeEmpty;
                   }
                   return null;
                 },
@@ -100,12 +103,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
+                decoration: InputDecoration(labelText: loc.username),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone'),
+                decoration: InputDecoration(labelText: loc.phone),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 24),
@@ -113,7 +116,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
                 onPressed: _updateProfile,
-                child: const Text('Save Changes'),
+                child: Text(loc.saveChanges),
               ),
             ],
           ),

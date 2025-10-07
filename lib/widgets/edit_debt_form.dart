@@ -1,7 +1,5 @@
-import 'dart:math';
 
-import 'package:dubie_app/models/debt.dart';
-import 'package:dubie_app/models/debt_item.dart';
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/providers/debt_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -68,6 +66,7 @@ class _EditDebtFormState extends State<EditDebtForm> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -82,9 +81,9 @@ class _EditDebtFormState extends State<EditDebtForm> {
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               color: Colors.blue,
             ),
-            child: const Text(
-              "Edit",
-              style: TextStyle(
+            child: Text(
+              loc.edit,
+              style: const TextStyle(
                   fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
@@ -96,19 +95,19 @@ class _EditDebtFormState extends State<EditDebtForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Description",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(loc.description,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _descController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: "Enter description",
+                      hintText: loc.enterDescription,
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  const Text("Debt Items",
+                  Text(loc.dubieItems,
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
 
@@ -133,8 +132,8 @@ class _EditDebtFormState extends State<EditDebtForm> {
                               child: TextField(
                                 controller: item.description,
                                 enabled: !item.deleted,
-                                decoration: const InputDecoration(
-                                    labelText: "Description"),
+                                decoration: InputDecoration(
+                                    labelText: loc.description),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -146,8 +145,8 @@ class _EditDebtFormState extends State<EditDebtForm> {
                                 keyboardType:
                                 const TextInputType.numberWithOptions(
                                     decimal: true),
-                                decoration:
-                                const InputDecoration(labelText: "Price"),
+                                decoration: InputDecoration(
+                                    labelText: loc.price),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -159,8 +158,8 @@ class _EditDebtFormState extends State<EditDebtForm> {
                                 keyboardType:
                                 const TextInputType.numberWithOptions(
                                     decimal: true),
-                                decoration: const InputDecoration(
-                                    labelText: "Paid"),
+                                decoration: InputDecoration(
+                                    labelText: loc.paid),
                               ),
                             ),
                             IconButton(
@@ -197,10 +196,10 @@ class _EditDebtFormState extends State<EditDebtForm> {
               children: [
                 TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text("Cancel")),
+                    child: Text(loc.cancel)),
                 const SizedBox(width: 12),
                 ElevatedButton(
-                    onPressed: _handleSave, child: const Text("Save")),
+                    onPressed: _handleSave, child: Text(loc.save)),
               ],
             ),
           )

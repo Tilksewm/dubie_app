@@ -262,6 +262,6 @@ class AuthProvider with ChangeNotifier {
     }
     final newUserId = prefs.getString('user_id')!;
     _currentUser = await _dbService.getUser(newUserId);
-    print('${_currentUser!.name}');
+    print(_currentUser!.name);
   }
 }

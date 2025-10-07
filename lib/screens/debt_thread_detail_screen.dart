@@ -1,5 +1,7 @@
 // import 'dart:ffi';
 import 'dart:io';
+import 'package:dubie_app/app_constants.dart';
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:dubie_app/models/debt_item.dart';
@@ -42,12 +44,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
 
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
-
-  // Use test ad unit IDs. Replace with your own IDs in production.
-  final String _bannerAdUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/6300978111' // Android test ad unit ID
-      : 'ca-app-pub-3940256099942544/2934735716'; // iOS test ad unit ID
-
+  bool shouldHomeRefresh = false;
 
   @override
   void initState() {
@@ -64,26 +61,30 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
   void _loadBannerAd() async {
     final width = MediaQuery.of(context).size.width.truncate();
     final AnchoredAdaptiveBannerAdSize? size =
-    await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
+        await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
 
     if (size == null) {
       debugPrint('Failed to get adaptive ad size');
       return;
     }
     _bannerAd = BannerAd(
-      adUnitId: _bannerAdUnitId,
+      adUnitId: AppConstants.bannerAdUnitId,
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(
         onAdLoaded: (Ad ad) {
           print('$BannerAd loaded.');
           setState(() {
+            _bannerAd = ad as BannerAd;
             _isBannerAdLoaded = true;
           });
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           print('$BannerAd failedToLoad: $error');
           ad.dispose();
+          setState(() {
+            _isBannerAdLoaded = false;
+          });
         },
         onAdOpened: (Ad ad) => print('$BannerAd onAdOpened.'),
         onAdClosed: (Ad ad) => print('$BannerAd onAdClosed.'),
@@ -103,15 +104,16 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
     );
   }
   Future<void> _deleteDebt(BuildContext context, DebtThread debtThread) async {
+    final loc = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Debt'),
-        content: const Text('Are you sure you want to delete this Debt? This action cannot be undone.'),
+        title: Text(loc.deleteDebt),
+        content: Text(loc.deleteDebtConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -124,19 +126,19 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                 
                 if (mounted) {
                   Navigator.of(ctx).pop(); // Pop dialog
-                  Navigator.of(context).pop(context);
+                  Navigator.of(context).pop(true);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Debt deleted successfully.')),
+                    SnackBar(content: Text(loc.debtDeletedSuccessfully)),
                   );
                 }
               } catch (e) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text('Failed to delete Debt: $e')),
+                  SnackBar(content: Text(loc.failedToDeleteDebt)),
                 );
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(loc.delete, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -147,6 +149,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
   }
 
   Future<void> _addComment() async {
+    final loc = AppLocalizations.of(context)!;
     if (_commentController.text.isEmpty) return;
     try {
       await Provider.of<DebtProvider>(context, listen: false)
@@ -154,41 +157,42 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       _commentController.clear();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Comment added!')),
+          SnackBar(content: Text(loc.commentAddedSuccessfully)),
         );
       }
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add comment: ${e.message}')),
+          SnackBar(content: Text(loc.failedToAddComment)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An unexpected error occurred.')),
+          SnackBar(content: Text(loc.somethingWentWrong)),
         );
       }
     }
   }
 
   Future<void> _addDebtItem() async {
+    final loc = AppLocalizations.of(context)!;
     if (_itemDescriptionController.text.isEmpty || _itemPriceController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter item description and price.')),
+        SnackBar(content: Text(loc.enterItemDescriptionAndPrice)),
       );
       return;
     }
     final double? price = double.tryParse(_itemPriceController.text);
     if (price == null || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid positive price.')),
+        SnackBar(content: Text(loc.enterValidPositivePrice)),
       );
       return;
     }
 
     try {
-      final provider = await Provider.of<DebtProvider>(context, listen: false);
+      final provider = Provider.of<DebtProvider>(context, listen: false);
       provider.addDebtItem(DebtItem(
         id: provider.generateId(),
         debtId: widget.debtId,
@@ -201,42 +205,44 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       _itemPriceController.clear();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Item added!')),
+          SnackBar(content: Text(loc.itemAdded)),
         );
+        shouldHomeRefresh = true;
       }
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add item: ${e.message}')),
+          SnackBar(content: Text(loc.failedToAddItem)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An unexpected error occurred.')),
+          SnackBar(content: Text(loc.somethingWentWrong)),
         );
       }
     }
   }
 
   Future<void> _payDebtItemForm(DebtItem debtItem) async {
+    final loc = AppLocalizations.of(context)!;
     final TextEditingController amountController = TextEditingController(text: '${debtItem.amount - debtItem.paidAmount}');
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Record Payment'),
+        title: Text(loc.recordPayment),
         content: TextField(
           controller: amountController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            labelText: 'Amount Paid (Max: ${currencyFormatter.format(debtItem.amount - debtItem.paidAmount)})',
-            hintText: 'Enter amount to pay',
+            labelText: '${loc.amountPaidMax} ${currencyFormatter.format(debtItem.amount - debtItem.paidAmount)})',
+            hintText: loc.enterAmountToPay,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -244,7 +250,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               if (amount == null || amount <= 0 || (debtItem.paidAmount + amount) > debtItem.amount) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a valid amount.')),
+                    SnackBar(content: Text(loc.enterValidAmount)),
                   );
                 }
                 return;
@@ -252,31 +258,34 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               debtItem.paidAmount += amount;
               _payDebtItem(debtItem);
               Navigator.pop(context); // Close dialog
+              shouldHomeRefresh = true;
             },
-            child: const Text('Pay'),
+            child: Text(loc.pay),
           ),
         ],
       ),
     );
   }
   Future <void> _payDebtItem(DebtItem debtItem) async{
+    final loc = AppLocalizations.of(context)!;
     try {
       await Provider.of<DebtProvider>(context, listen: false).payDebtItem(debtItem);
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to record payment: ${e.message}')),
+          SnackBar(content: Text(loc.failedToRecordPayment)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An unexpected error occurred.')),
+          SnackBar(content: Text(loc.somethingWentWrong)),
         );
       }
     }
   }
   Future<void> _payRandomDebt(DebtThread debt, double totalAmount) async{
+    final loc = AppLocalizations.of(context)!;
     final outstandingAmount = debt.items.map((item) => item.amount - item.paidAmount).reduce((a, b) => a + b);
     if (totalAmount <= outstandingAmount){
       List<DebtItem> items = debt.items;
@@ -299,27 +308,28 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
         _refreshDebtDetails();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Payment recorded!')),
+            SnackBar(content: Text(loc.paymentRecordedSuccessfully)),
           );
+          shouldHomeRefresh = true;
         }
       }
 
       on ApiException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to record payment: ${e.message}')),
+            SnackBar(content: Text(loc.failedToRecordPayment)),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('An unexpected error occurred. $e')),
+            SnackBar(content: Text(loc.somethingWentWrong)),
           );
         }
       }
     }else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Entered Amount Exceeded the outstanding Amount")
+        SnackBar(content: Text(loc.enterAmountExceededOutstanding)
         )
       );
     }
@@ -327,24 +337,25 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
     print("total payment: $totalAmount");
   }
   Future<void> _payAllForm(DebtThread debt) async {
+    final loc = AppLocalizations.of(context)!;
     final outstandingAmount = debt.items.map((item) => item.amount - item.paidAmount).reduce((a,b) => (a+b));
     final TextEditingController totalPaymentController = TextEditingController(text: "$outstandingAmount");
 
     await showDialog(context: context, builder: (context) =>
       AlertDialog(
-        title: Text("Enter Total Amount"),
+        title: Text(loc.enterTotalAmount),
         content: TextField(
               controller: totalPaymentController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: "Amount Paid (Max: ${currencyFormatter.format(outstandingAmount)}",
-                hintText: "Enter Total Amount",
+                labelText: "${loc.paidAmount} ${currencyFormatter.format(outstandingAmount)})",
+                hintText: loc.enterTotalAmount,
               )
           ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: Text(loc.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -352,7 +363,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               totalPaymentController.clear();
               Navigator.pop(context);
             },
-            child: Text("Pay"),
+            child: Text(loc.pay),
           ),
         ],
       ),
@@ -360,37 +371,38 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
   }
 
   Future<void> _showAddItemDialog() async {
+    final loc = AppLocalizations.of(context)!;
     _itemDescriptionController.clear();
     _itemPriceController.clear();
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add New Dubie Item'),
+        title: Text(loc.addNewDubieItem),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _itemDescriptionController,
-              decoration: const InputDecoration(labelText: 'Description'),
+              decoration: InputDecoration(labelText: loc.description),
             ),
             TextField(
               controller: _itemPriceController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Amount'),
+              decoration: InputDecoration(labelText: loc.amount),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               _addDebtItem();
               Navigator.pop(context); // Close dialog
             },
-            child: const Text('Add'),
+            child: Text(loc.add),
           ),
         ],
       ),
@@ -399,6 +411,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
 
   @override
   void dispose() {
+    _bannerAd?.dispose();
     _commentController.dispose();
     _itemDescriptionController.dispose();
     _itemPriceController.dispose();
@@ -407,14 +420,24 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final loc = AppLocalizations.of(context)!;
+    return PopScope<bool>(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, bool? result) {
+        if (didPop) {
+          return; // Pop already occurred
+        }
+        // Manually pop with the correct value
+        Navigator.of(context).pop(shouldHomeRefresh);
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Consumer<DebtProvider>(
           builder: (context, debtProvider, child) {
             final debtThread = debtProvider.currentDebt;
             final debt = debtThread?.debt;
             if (debtProvider.isLoadingDebt && debt == null) {
-              return const Text('Loading Debt...');
+              return Text(loc.loadingDebt);
             }
             final String titleText = debtThread?.items.length.toString() ?? debt!.overallDescription ?? 'Debt Details';
             final double outstanding = debtThread?.outstandingAmount ?? 0.0;
@@ -426,9 +449,9 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("$titleText Items", style: const TextStyle(fontSize: 18)),
+                Text("$titleText ${loc.items}", style: const TextStyle(fontSize: 18)),
                 Text(
-                  'Paid: ${currencyFormatter.format(totalPaid.abs())} / $totalAmount',
+                  '${loc.paidAmount} ${currencyFormatter.format(totalPaid.abs())} / $totalAmount',
                   style: TextStyle(fontSize: 14, color: Colors.black),
                 ),
               ],
@@ -442,10 +465,10 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (debtProvider.debtError != null) {
-            return Center(child: Text('Error: ${debtProvider.debtError}'));
+            return Center(child: Text('${loc.error} ${debtProvider.debtError}'));
           }
           if (debtProvider.currentDebt == null) {
-            return const Center(child: Text('Debt not found.'));
+            return Center(child: Text('${loc.debtNotFound}'));
           }
         final Color amountColor = debtProvider.currentDebt!.outstandingAmount! >= 0 ? Colors.green.shade700 : Colors.red.shade700;
         return
@@ -455,7 +478,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               Column(
                 children: [
                   Text(
-                    'Outstanding',
+                    loc.outstanding,
                     style: TextStyle(fontSize: 14,),
                   ),
                   Text(
@@ -477,10 +500,10 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (debtProvider.debtError != null) {
-            return Center(child: Text('Error: ${debtProvider.debtError}'));
+            return Center(child: Text('${loc.error} ${debtProvider.debtError}'));
           }
           if (debtProvider.currentDebt == null) {
-            return const Center(child: Text('Debt not found.'));
+            return Center(child: Text(loc.debtNotFound));
           }
 
           final debtThread = debtProvider.currentDebt!;
@@ -509,7 +532,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Status: ${debt.status}',
+                                        '${loc.status}: ${debt.status}',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -528,16 +551,14 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                     onSelected: (value) {
                                       if (value == 'edit') {
                                         _updateDebt(context, debtThread);
-                                        print("Edit clicked");
                                       } else if (value == 'delete') {
                                         _deleteDebt(context, debtThread);
-                                        print("Delete clicked");
                                       }
                                     },
                                     itemBuilder: (BuildContext context) => [
                                       PopupMenuItem(
                                         value: 'edit',
-                                        child: Text("Edit Debt"),
+                                        child: Text(loc.editDebt),
                                       ),
                                       PopupMenuItem( // custom divider
                                         enabled: false, // not selectable
@@ -550,7 +571,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                                       ),
                                       PopupMenuItem(
                                         value: 'delete',
-                                        child: Text("Delete Debt"),
+                                        child: Text(loc.deleteDebt),
                                       ),
                                     ],
                                   ),
@@ -569,52 +590,51 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Dubie Items:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text(loc.dubieItems, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
                           ElevatedButton.icon(
                               onPressed: () => _payAllForm(debtThread),
                               icon: Icon(Icons.payments),
-                            label: Text("Pay All"),
+                            label: Text(loc.payAll),
                           )
                         ],
                       ),
                       const SizedBox(height: 8),
-                      if (debtThread.items == null || debtThread.items.isEmpty)
-                        const Text('No items in this dubie yet.', style: TextStyle(color: Colors.grey)),
-                      if (debtThread.items != null)
-                        ...debtThread.items.map((item) {
-                          final Color itemStatusColor = item.isPaid ? Colors.green : Colors.orange;
-                          final String itemStatusText = item.isPaid ? 'Paid' : 'Pending';
-                          final double remainingAmount = item.amount - item.paidAmount;
+                      if (debtThread.items.isEmpty)
+                        Text(loc.noItemsInThisDubie, style: TextStyle(color: Colors.grey)),
+                      ...debtThread.items.map((item) {
+                        final Color itemStatusColor = item.isPaid ? Colors.green : Colors.orange;
+                        final String itemStatusText = item.isPaid ? loc.paid : loc.pending;
+                        final double remainingAmount = item.amount - item.paidAmount;
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: ListTile(
-                              title: Text(item.description),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Amount: ${currencyFormatter.format(item.amount)}'),
-                                  Text('Paid: ${currencyFormatter.format(item.paidAmount)}'),
-                                  Text(
-                                    '$itemStatusText ${item.isPaid ? '' : '(Remaining: ${currencyFormatter.format(remainingAmount)})'}',
-                                    style: TextStyle(color: itemStatusColor, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              trailing: item.isPaid ?
-                                  Text("Paid", style: TextStyle(color: Colors.green, fontSize: 16),):
-                                 ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
-                                  ? IconButton(
-                                icon: const Icon(Icons.payment, color: Colors.blue),
-                                onPressed: debtProvider.isActionInProgress
-                                    ? null
-                                    : () => _payDebtItemForm(item),
-                              )
-                                  : null,
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: ListTile(
+                            title: Text(item.description),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('${loc.amount}: ${currencyFormatter.format(item.amount)}'),
+                                Text('${loc.paidAmount}: ${currencyFormatter.format(item.paidAmount)}'),
+                                Text(
+                                  '$itemStatusText ${item.isPaid ? '' : '(${loc.remaining}: ${currencyFormatter.format(remainingAmount)})'}',
+                                  style: TextStyle(color: itemStatusColor, fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ),
-                          );
-                        }).toList(),
+                            trailing: item.isPaid ?
+                                Text(loc.paid, style: TextStyle(color: Colors.green, fontSize: 16),):
+                               ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
+                                ? IconButton(
+                              icon: const Icon(Icons.payment, color: Colors.blue),
+                              onPressed: debtProvider.isActionInProgress
+                                  ? null
+                                  : () => _payDebtItemForm(item),
+                            )
+                                : null,
+                          ),
+                        );
+                      }).toList(),
                       const SizedBox(height: 16),
 
                       // Add New Item
@@ -622,7 +642,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                         ElevatedButton.icon(
                           onPressed: debtProvider.isActionInProgress ? null : _showAddItemDialog,
                           icon: const Icon(Icons.add_shopping_cart),
-                          label: const Text('Add New Item'),
+                          label: Text(loc.addNewItem),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueAccent, // Use a distinct color
                             foregroundColor: Colors.white,
@@ -640,14 +660,14 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
 
                       const SizedBox(height: 24),
                       // Comments Section
-                      const Text('Comments:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('${loc.comments}:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       if (debtProvider.isLoadingComments && debtProvider.comments == null)
                         const Center(child: CircularProgressIndicator())
                       else if (debtProvider.commentsError != null)
-                        Center(child: Text('Error loading comments: ${debtProvider.commentsError}'))
+                        Center(child: Text('${loc.errorLoadingComments}: ${debtProvider.commentsError}'))
                       else if (debtProvider.comments!.isEmpty)
-                          const Text('No comments yet.', style: TextStyle(color: Colors.grey)),
+                          Text(loc.noCommentsYet, style: const TextStyle(color: Colors.grey)),
                       if (debtProvider.comments != null)
                         ...debtProvider.comments!.map((comment) {
                           return Padding(
@@ -687,7 +707,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                             //   ],
                             // ),
                           );
-                        }).toList(),
+                        }),
                     ],
                   ),
                 ),
@@ -700,7 +720,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                         child: TextField(
                           controller: _commentController,
                           decoration: InputDecoration(
-                            hintText: 'Add a comment...',
+                            hintText: loc.addCommentHint,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20.0),
                             ),
@@ -725,10 +745,12 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
           );
         },
       ),
+    )
     );
   }
 
   Widget _buildActionButtons(Debt debt, bool isCreditor, bool isBorrower, DebtProvider debtProvider) {
+    final loc = AppLocalizations.of(context)!;
     if (debtProvider.isActionInProgress) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -744,19 +766,19 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               await debtProvider.acceptDebt(debt);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Debt accepted!')),
+                  SnackBar(content: Text('${loc.debtAccepted}!')),
                 );
               }
             } on ApiException catch (e) {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to accept: ${e.message}')),
+                  SnackBar(content: Text(loc.faildToAcceptDebt)),
                 );
               }
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-          child: const Text('Accept Dubie'),
+          child: Text(loc.acceptDubie),
         ));
       }
       if (debt.status == 'new' || debt.status == 'pending_acceptance' || debt.status == 'amended_pending_reacceptance') {
@@ -766,19 +788,19 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               await debtProvider.rejectDebt(debt);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Debt rejected!')),
+                  SnackBar(content: Text('${loc.debtRejected}!')),
                 );
               }
             } on ApiException catch (e) {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to reject: ${e.message}')),
+                  SnackBar(content: Text(loc.failedToRejectDebt)),
                 );
               }
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-          child: const Text('Reject Dubie'),
+          child: Text(loc.rejectDubie),
         ));
       }
     }

@@ -1,10 +1,9 @@
 // This file remains the same as provided in the last response,
 // ensuring navigation to UserDebtsDetailScreen after adding a new user.
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:dubie_app/providers/home_provider.dart';
 import 'package:dubie_app/services/api_service.dart';
-import 'package:dubie_app/screens/user_debts_detail_screen.dart';
 
 import '../models/user.dart';
 import '../providers/user_provider.dart'; // Import the detail screen
@@ -33,6 +32,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   }
 
   Future<void> _updateUser(String name, String phone, String email, String username) async {
+    final loc = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -40,6 +40,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       try {
         if(widget.user.userType != 'real'){
           if (name.isNotEmpty){
+            if (email.isEmpty || email.contains('@')) {
             final updatedUser = await Provider.of<UserProvider>(context, listen: false).editTemporaryUser(
               widget.user.id,
               name: name,
@@ -49,14 +50,18 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             );
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Person updated successfully!')),
+                SnackBar(content: Text(loc.personUpdatedSuccessfully)),
               );
-              // Navigator.of(context).pop(); // Pop this AddUserScreen first
-              //
+              Navigator.of(context).pop(); // Pop this UserInfoScreen first
             }
+          }else{
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(loc.enterValidEmail)),
+            );
+          }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Name can\'t be empty')),
+              SnackBar(content: Text(loc.nameCannotBeEmpty)),
             );
           }
         }
@@ -64,13 +69,13 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       } on ApiException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update person: ${e.message}')),
+            SnackBar(content: Text( loc.failedToUpdatePerson)),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('An unexpected error occurred.')),
+            SnackBar(content: Text(loc.somethingWentWrong)),
           );
         }
       } finally {
@@ -97,6 +102,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final userProvider = Provider.of<UserProvider>(context);
     final thisUser = userProvider.currentUser;
 
@@ -114,7 +120,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     if (thisUser?.userType != 'real'){
       return Scaffold(
         appBar: AppBar(
-          title: const Text('update User data'),
+          title: Text(loc.updateUserData),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -125,13 +131,13 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
               children: [
                 TextFormField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: loc.fullName,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Name is required';
+                      return loc.nameCannotBeEmpty;
                     }
                     return null;
                   },
@@ -139,27 +145,39 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                 const SizedBox(height: 16.0),
                 TextFormField(
                   controller: phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone (Optional)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: loc.phoneOptional,
+                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty && !RegExp(r'^\+[0-9]{7,15}$').hasMatch(value)) {
+                      return loc.enterValidPhoneWithCountryCode;
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
                   controller: emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email (Optional)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: loc.emailOptional,
+                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if ((value != null && value.isNotEmpty) && !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      return loc.enterValidEmail;
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
                   controller: usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Username (Optional)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: loc.usernameOptional,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 24.0),
@@ -173,12 +191,11 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                         emailController.text,
                         usernameController.text
                     );
-                    Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text('Save', style: TextStyle(fontSize: 18)),
+                  child: Text(loc.save, style: const TextStyle(fontSize: 18)),
                 ),
               ],
             ),
@@ -186,7 +203,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         ),
       );
     }else {
-      return Center(child: Text("Unknown error occurred"));
+      return Center(child: Text(loc.somethingWentWrong),);
     }
   }
 }

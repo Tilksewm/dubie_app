@@ -19,7 +19,7 @@ class HomeProvider with ChangeNotifier {
   bool _isLoadingSummary = false;
   bool _isLoadingCreditors = false;
   bool _isLoadingBorrowers = false;
-  bool _isLoadingUserType = false;
+  final bool _isLoadingUserType = false;
 
   String? _summaryError;
   String? _creditorsError;

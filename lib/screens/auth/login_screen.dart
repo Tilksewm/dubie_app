@@ -1,4 +1,6 @@
 // lib/screens/login_screen.dart
+import 'package:dubie_app/l10n/app_localizations.dart';
+import 'package:dubie_app/screens/auth/forgot_password_screen.dart';
 import 'package:dubie_app/screens/auth/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -59,9 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: Text(loc.login),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -72,24 +75,24 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Welcome Back!',
+                  loc.welcomeBack,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 30),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                  decoration: InputDecoration(
+                    labelText: loc.email,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.email),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
+                      return loc.enterYourEmail;
                     }
                     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Please enter a valid email address';
+                      return loc.enterValidEmail;
                     }
                     return null;
                   },
@@ -97,18 +100,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                  decoration: InputDecoration(
+                    labelText: loc.password,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
                   ),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                      return loc.enterYourPassword;
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 24),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                    );
+                  },
+                child: Text(loc.forgotPassword),
                 ),
                 const SizedBox(height: 24),
                 if (_errorMessage != null)
@@ -127,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                   ),
-                  child: const Text('Login'),
+                  child: Text(loc.login),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
@@ -136,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(builder: (context) => const SignupScreen()),
                     );
                   },
-                  child: const Text('Don\'t have an account? Sign Up'),
+                  child: Text(loc.noAccountSignUp),
                 ),
               ],
             ),

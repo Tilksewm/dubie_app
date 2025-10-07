@@ -1,3 +1,4 @@
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 import '../models/user.dart';
@@ -52,6 +53,7 @@ class _DebtParticipantSwitchState extends State<DebtParticipantSwitch> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
       decoration: BoxDecoration(
@@ -64,7 +66,7 @@ class _DebtParticipantSwitchState extends State<DebtParticipantSwitch> {
           Expanded(
             child: _buildParticipantDisplay(
               user: _giver,
-              label: 'From',
+              label: loc.from,
               alignment: CrossAxisAlignment.start,
             ),
           ),
@@ -73,13 +75,13 @@ class _DebtParticipantSwitchState extends State<DebtParticipantSwitch> {
             child: IconButton(
               icon: const Icon(Icons.swap_horiz, size: 30.0),
               onPressed: _handleSwitch,
-              tooltip: 'Switch Giver and Borrower',
+              tooltip: loc.switchGiverAndBorrower,
             ),
           ),
           Expanded(
             child: _buildParticipantDisplay(
               user: _borrower,
-              label: 'To',
+              label: loc.to,
               alignment: CrossAxisAlignment.end,
             ),
           ),

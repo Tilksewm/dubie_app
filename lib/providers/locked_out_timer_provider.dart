@@ -21,5 +21,6 @@ class LockedOutTimerProvider extends ChangeNotifier{
   }
   bool get isLockedOut => _remaining > Duration.zero;
   Duration get remaining => _remaining;
+  @override
   void dispose() { _timer?.cancel(); super.dispose(); }
 }

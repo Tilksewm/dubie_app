@@ -1,10 +1,10 @@
 // This file remains the same as provided in the last response,
 // ensuring navigation to UserDebtsDetailScreen after adding a new user.
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dubie_app/providers/home_provider.dart';
-import 'package:dubie_app/services/api_service.dart';
 import 'package:dubie_app/screens/user_debts_detail_screen.dart'; // Import the detail screen
 
 class AddUserScreen extends StatefulWidget {
@@ -28,6 +28,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
   bool _isLoading = false;
 
   Future<void> _addPerson() async {
+    final loc = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -43,7 +44,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
         print('New user created with ID: ${newUser.id}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Person added successfully!')),
+            SnackBar(content: Text(loc.personAddedSuccessfully)),
           );
           Navigator.of(context).pop(); // Pop this AddUserScreen first
           Navigator.of(context).push(
@@ -59,7 +60,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('An unexpected error occurred.')),
+            SnackBar(content: Text(loc.somethingWentWrong)),
           );
         }
       } finally {
@@ -81,9 +82,10 @@ class _AddUserScreenState extends State<AddUserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Person'),
+        title: Text(loc.addNewPerson),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -94,13 +96,13 @@ class _AddUserScreenState extends State<AddUserScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.fullName,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Name is required';
+                    return loc.enterYourFullName;
                   }
                   return null;
                 },
@@ -108,27 +110,39 @@ class _AddUserScreenState extends State<AddUserScreen> {
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone (Optional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.phoneOptional,
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty && !RegExp(r'^\+[0-9]{7,15}$').hasMatch(value)) {
+                    return loc.enterValidPhoneWithCountryCode;
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email (Optional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.emailOptional,
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if ((value != null && value.isNotEmpty) && !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return loc.enterValidEmail;
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username (Optional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.usernameOptional,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 24.0),
@@ -139,7 +153,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: const Text('Add Person', style: TextStyle(fontSize: 18)),
+                child: Text(loc.addPerson, style: TextStyle(fontSize: 18)),
               ),
             ],
           ),

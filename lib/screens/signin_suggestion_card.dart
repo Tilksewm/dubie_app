@@ -1,3 +1,4 @@
+import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/providers/auth_provider.dart';
 import 'package:dubie_app/screens/auth/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,7 @@ class SignInSuggestionCardState extends State<SignInSuggestionCard>
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return _isVisible
         ? SlideTransition(
       position: _offsetAnimation,
@@ -76,9 +78,9 @@ class SignInSuggestionCardState extends State<SignInSuggestionCard>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Unlock Exclusive Features',
-                    style: TextStyle(
+                  Text(
+                    loc.unlockExclusiveFeatures,
+                    style: const TextStyle(
                       fontSize: 18.0,
                       fontWeight: FontWeight.bold,
                     ),
@@ -90,8 +92,8 @@ class SignInSuggestionCardState extends State<SignInSuggestionCard>
                 ],
               ),
               const SizedBox(height: 8.0),
-              const Text(
-                'Create an account to save your preferences, and to sync your data across devices.',
+              Text(
+                loc.signInSuggestionMessage,
                 style: TextStyle(fontSize: 14.0),
               ),
               const SizedBox(height: 16.0),
@@ -105,9 +107,9 @@ class SignInSuggestionCardState extends State<SignInSuggestionCard>
                 ),
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const LoginScreen() ));
+                      builder: (context) => const LoginScreen()));
                 },
-                child: const Text('Sign In / Sign Up'),
+                child: Text(loc.signinSignup),
               ),
             ],
           ),

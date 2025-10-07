@@ -56,10 +56,10 @@ class OverlappingChipStack extends StatelessWidget {
   final int maxVisibleItems; // How many chips to show before the overflow
 
   const OverlappingChipStack({
-    Key? key,
+    super.key,
     required this.items,
     this.maxVisibleItems = 3, // Default to 3 visible chips + overflow
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

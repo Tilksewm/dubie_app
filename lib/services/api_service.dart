@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:dubie_app/services/local_db_service.dart';
 import 'package:dubie_app/services/sync_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
