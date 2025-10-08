@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       return;
     }
     _bannerAd = BannerAd(
-      adUnitId: AppConstants.bannerAdUnitId,
+      adUnitId: AppConstants.bannerAdUnitIdHome,
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(

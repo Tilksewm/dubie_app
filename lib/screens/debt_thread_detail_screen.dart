@@ -68,7 +68,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       return;
     }
     _bannerAd = BannerAd(
-      adUnitId: AppConstants.bannerAdUnitId,
+      adUnitId: AppConstants.bannerAdUnitIdDetailThread,
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(

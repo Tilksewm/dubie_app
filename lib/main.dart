@@ -41,6 +41,10 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final dbService = LocalDbService(prefs);
+  MaterialApp(
+    debugShowCheckedModeBanner: false,
+  );
+
   runApp(MyApp(prefs: prefs));
 }
 

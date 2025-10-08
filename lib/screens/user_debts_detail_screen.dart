@@ -71,7 +71,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
       return;
     }
     _bannerAd = BannerAd(
-      adUnitId: AppConstants.bannerAdUnitId,
+      adUnitId: AppConstants.bannerAdUnitIdDetail,
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(
