@@ -98,7 +98,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Dubie'**
+  /// **'Debt Tracker'**
   String get appName;
 
   /// No description provided for @guestUser.
@@ -470,7 +470,7 @@ abstract class AppLocalizations {
   /// No description provided for @createNewDubie.
   ///
   /// In en, this message translates to:
-  /// **'Create New Dubie'**
+  /// **'Create New Debt'**
   String get createNewDubie;
 
   /// No description provided for @overallDescriptionOptional.
@@ -482,7 +482,7 @@ abstract class AppLocalizations {
   /// No description provided for @addDubieItems.
   ///
   /// In en, this message translates to:
-  /// **'Add Dubie Items:'**
+  /// **'Add Debt Items:'**
   String get addDubieItems;
 
   /// No description provided for @itemDescription.
@@ -506,7 +506,7 @@ abstract class AppLocalizations {
   /// No description provided for @createDubie.
   ///
   /// In en, this message translates to:
-  /// **'Create Dubie'**
+  /// **'Create Debt'**
   String get createDubie;
 
   /// No description provided for @deleteDebt.
@@ -626,7 +626,7 @@ abstract class AppLocalizations {
   /// No description provided for @addNewDubieItem.
   ///
   /// In en, this message translates to:
-  /// **'Add New Dubie Item'**
+  /// **'Add New Debt Item'**
   String get addNewDubieItem;
 
   /// No description provided for @description.
@@ -692,7 +692,7 @@ abstract class AppLocalizations {
   /// No description provided for @noItemsInThisDubie.
   ///
   /// In en, this message translates to:
-  /// **'No items in this dubie yet.'**
+  /// **'No items in this Debt yet.'**
   String get noItemsInThisDubie;
 
   /// No description provided for @pending.
@@ -758,7 +758,7 @@ abstract class AppLocalizations {
   /// No description provided for @acceptDubie.
   ///
   /// In en, this message translates to:
-  /// **'Accept Dubie'**
+  /// **'Accept Debt'**
   String get acceptDubie;
 
   /// No description provided for @debtRejected.
@@ -776,7 +776,7 @@ abstract class AppLocalizations {
   /// No description provided for @rejectDubie.
   ///
   /// In en, this message translates to:
-  /// **'Reject Dubie'**
+  /// **'Reject Debt'**
   String get rejectDubie;
 
   /// No description provided for @setPin.
@@ -938,7 +938,7 @@ abstract class AppLocalizations {
   /// No description provided for @startNewDubie.
   ///
   /// In en, this message translates to:
-  /// **'Start New Dubie'**
+  /// **'Start New Debt'**
   String get startNewDubie;
 
   /// No description provided for @debtThread.
@@ -1024,6 +1024,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User'**
   String get user;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your account? This action cannot be undone.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @accountDeletedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted successfully.'**
+  String get accountDeletedSuccessfully;
+
+  /// No description provided for @failedDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete account.'**
+  String get failedDeleteAccount;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

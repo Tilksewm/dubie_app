@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Dubie';
+  String get appName => 'Debt Tracker';
 
   @override
   String get guestUser => 'Guest User';
@@ -195,13 +195,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addAtListOneItem => 'Please add at least one debt item.';
 
   @override
-  String get createNewDubie => 'Create New Dubie';
+  String get createNewDubie => 'Create New Debt';
 
   @override
   String get overallDescriptionOptional => 'Overall Description (Optional)';
 
   @override
-  String get addDubieItems => 'Add Dubie Items:';
+  String get addDubieItems => 'Add Debt Items:';
 
   @override
   String get itemDescription => 'Item Description';
@@ -213,7 +213,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get etb => 'ETB';
 
   @override
-  String get createDubie => 'Create Dubie';
+  String get createDubie => 'Create Debt';
 
   @override
   String get deleteDebt => 'Delete Debt';
@@ -273,7 +273,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterTotalAmount => 'Enter Total Amount';
 
   @override
-  String get addNewDubieItem => 'Add New Dubie Item';
+  String get addNewDubieItem => 'Add New Debt Item';
 
   @override
   String get description => 'Description';
@@ -306,7 +306,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payAll => 'Pay All';
 
   @override
-  String get noItemsInThisDubie => 'No items in this dubie yet.';
+  String get noItemsInThisDubie => 'No items in this Debt yet.';
 
   @override
   String get pending => 'Pending';
@@ -339,7 +339,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get faildToAcceptDebt => 'Failed to accept this Debt';
 
   @override
-  String get acceptDubie => 'Accept Dubie';
+  String get acceptDubie => 'Accept Debt';
 
   @override
   String get debtRejected => 'Debt rejected';
@@ -348,7 +348,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToRejectDebt => 'Failed to reject this Debt';
 
   @override
-  String get rejectDubie => 'Reject Dubie';
+  String get rejectDubie => 'Reject Debt';
 
   @override
   String get setPin => 'Set PIN';
@@ -431,7 +431,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get startNewDubie => 'Start New Dubie';
+  String get startNewDubie => 'Start New Debt';
 
   @override
   String get debtThread => 'Debt Thread';
@@ -476,4 +476,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get user => 'User';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account';
+
+  @override
+  String get deleteAccountWarning => 'Are you sure you want to delete your account? This action cannot be undone.';
+
+  @override
+  String get accountDeletedSuccessfully => 'Account deleted successfully.';
+
+  @override
+  String get failedDeleteAccount => 'Failed to delete account.';
 }

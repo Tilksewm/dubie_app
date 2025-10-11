@@ -1,4 +1,4 @@
-package com.example.dubie_app
+package com.rastechnologies.dubiedebttracker
 
 import io.flutter.embedding.android.FlutterActivity
 

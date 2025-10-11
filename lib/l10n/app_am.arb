@@ -46,7 +46,7 @@
     "enterYourPassword": "እባክዎ የ ይለፍ ቃልዎን ያስገቡ",
     "noAccountSignUp": "አካዉንት የለዎትም? ይመዝገቡ",
     "signupSuccess": "ምዝገባዎ ተሳክቷል፣ እባክዎን ከመግባትዎ በፊት የላክንልዎትን ኢሜል በማየት ያረጋግጡልን።",
-    "createAccount": "አካኡንት ይክፈቱ",
+    "createAccount": "አካዉንት ይክፈቱ",
     "fullName": "ሙሉ ስም",
     "enterYourFullName": "እባክዎ ሙሉ ስምዎን ያስገቡ",
     "passwordMinLength": "የይለፍ ቃልዎ ከ 6 ፊደላት መብለጥ አለበት",
@@ -165,5 +165,10 @@
     "enterDescription": "ማብራሪያ ያስገቡ",
     
     "unknownUser": "ያልተመዘገበ ደንበኛ",
-    "user": "ደንበኛ"
+    "user": "ደንበኛ",
+
+    "deleteAccountTitle": "አካዉንቱ ይጥፋ",
+    "deleteAccountWarning": "እርግጠኛ ነዎት፤ አካዉንትዎን ማጥፋት ይፈልጋሉ? መልሰዉ ማግኘት አይችሉም።",
+    "accountDeletedSuccessfully": "አካዉንትዎ በተሳካ ሁኔታ ጠፍቷል",
+    "failedDeleteAccount": "አካዉንትዎን ማጥፋት አልተቻለም"
 }

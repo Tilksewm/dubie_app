@@ -192,52 +192,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.arrow_forward_ios),
           ),
           // Add a simple button to delete account (for testing, should be secure in production)
-          // const Divider(),
-          // ListTile(
-          //   title: const Text('Delete Account'),
-          //   leading: const Icon(Icons.delete_forever, color: Colors.red),
-          //   onTap: () {
-          //     showDialog(
-          //       context: context,
-          //       builder: (ctx) => AlertDialog(
-          //         title: const Text('Delete Account'),
-          //         content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
-          //         actions: [
-          //           TextButton(
-          //             onPressed: () => Navigator.of(ctx).pop(),
-          //             child: const Text('Cancel'),
-          //           ),
-          //           ElevatedButton(
-          //             onPressed: () async {
-          //               // Implement delete account logic here
-          //               // This usually involves an API call to your backend
-          //               // Then log out the user and navigate to login screen
-          //               // For now, just log out as a placeholder
-          //               try {
-          //                 // await Provider.of<AuthProvider>(context, listen: false).apiService.deleteAccount(); // Implement this in api_service
-          //                 await Provider.of<AuthProvider>(context, listen: false).logout();
-          //                 if (mounted) {
-          //                   Navigator.of(ctx).pop(); // Pop dialog
-          //                   Navigator.of(context).pushReplacementNamed('/login');
-          //                   ScaffoldMessenger.of(context).showSnackBar(
-          //                     const SnackBar(content: Text('Account deleted successfully.')),
-          //                   );
-          //                 }
-          //               } catch (e) {
-          //                 ScaffoldMessenger.of(ctx).showSnackBar(
-          //                   SnackBar(content: Text('Failed to delete account: $e')),
-          //                 );
-          //               }
-          //             },
-          //             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          //             child: const Text('Delete', style: TextStyle(color: Colors.white)),
-          //           ),
-          //         ],
-          //       ),
-          //     );
-          //   },
-          // ),
-          // const Divider(),
+          const Divider(),
+          ListTile(
+            title: Text(loc.deleteAccountTitle),
+            leading: const Icon(Icons.delete_forever, color: Colors.red),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text(loc.deleteAccountTitle),
+                  content: Text(loc.deleteAccountWarning),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(loc.cancel),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Implement delete account logic here
+                        // This usually involves an API call to your backend
+                        // Then log out the user and navigate to login screen
+                        // For now, just log out as a placeholder
+                        try {
+                          await Provider.of<AuthProvider>(context, listen: false).apiService.deleteAccount(); // Implement this in api_service
+                          await Provider.of<AuthProvider>(context, listen: false).logout();
+                          if (mounted) {
+                            Navigator.of(ctx).pop(); // Pop dialog
+                            Navigator.of(context).pushReplacementNamed('/login');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(loc.accountDeletedSuccessfully)),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            SnackBar(content: Text(loc.failedDeleteAccount)),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      child: Text(loc.delete, style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const Divider(),
         ],
       ),
     );

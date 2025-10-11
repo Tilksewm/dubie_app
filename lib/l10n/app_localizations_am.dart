@@ -213,7 +213,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get etb => 'ብር';
 
   @override
-  String get createDubie => 'ዱቤዉ ይመዝግብ';
+  String get createDubie => 'ዱቤዉ ይመዝገብ';
 
   @override
   String get deleteDebt => 'ዱቤዉን ያጥፉ';
@@ -249,7 +249,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get recordPayment => 'ክፍያ መዝግብ';
 
   @override
-  String get amountPaidMax => 'የተከፈለ መጠን, (ቢበዛ:';
+  String get amountPaidMax => 'የሚከፈል መጠን, (ቢበዛ:';
 
   @override
   String get enterAmountToPay => 'መጠኑን ያስገቡ ለመክፈል';
@@ -330,7 +330,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get noCommentsYet => 'ለዚህ ዱቤ ምንም አስተያየት የለም';
 
   @override
-  String get addCommentHint => 'Add a comment...';
+  String get addCommentHint => 'አስተያየት ይጻፉ...';
 
   @override
   String get debtAccepted => 'ዱቤዉ ተቀባይነት አግኝቷል';
@@ -476,4 +476,16 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get user => 'ደንበኛ';
+
+  @override
+  String get deleteAccountTitle => 'አካዉንቱ ይጥፋ';
+
+  @override
+  String get deleteAccountWarning => 'እርግጠኛ ነዎት፤ አካዉንትዎን ማትፋት ይፈልጋሉ? መልሰዉ ማግኘት አይችሉም።';
+
+  @override
+  String get accountDeletedSuccessfully => 'አካዉንትዎ በተሳካ ሁኔታ ጠፍቷል';
+
+  @override
+  String get failedDeleteAccount => 'አካዉንትዎን ማጥፋት አልተቻለም';
 }
