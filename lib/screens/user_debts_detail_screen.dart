@@ -347,6 +347,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                                 );
                                 if (result == true) {
                                   _refreshDebts(); // Refresh if a new debt was created
+                                  shouldHomeRefresh = true;
                                 }
                               },
                               icon: const Icon(Icons.add),

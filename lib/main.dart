@@ -41,9 +41,6 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final dbService = LocalDbService(prefs);
-  MaterialApp(
-    debugShowCheckedModeBanner: false,
-  );
 
   runApp(MyApp(prefs: prefs));
 }
@@ -100,18 +97,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   void _showPinLockScreen() {
     Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (ctx) => PinLockScreen(
-            onPinVerified: () {
-              Navigator.of(ctx).pop(); // Pop PIN screen on success
-              setState(() {
-                _isAppLocked = false; // Reset lock state
-              });
-            },
-          ),
-          fullscreenDialog: true, // Make it a full screen dialog
+      MaterialPageRoute(
+        builder: (ctx) => PinLockScreen(
+          onPinVerified: () {
+            Navigator.of(ctx).pop(); // Pop PIN screen on success
+            setState(() {
+              _isAppLocked = false; // Reset lock state
+            });
+          },
         ),
-      );
+        fullscreenDialog: true, // Make it a full screen dialog
+      ),
+    );
   }
 
   @override
@@ -129,70 +126,69 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(widget.prefs),
-        )
+        ),
       ],
 
-      child: Consumer<LanguageProvider>(builder: (context, langProvider, child) {
-
-        return MaterialApp(
-          locale: langProvider.locale,
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          title: AppLocalizations.of(context)?.appName,
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+      child: Consumer<LanguageProvider>(
+        builder: (context, langProvider, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            locale: langProvider.locale,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            title: AppLocalizations.of(context)?.appName,
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+              visualDensity: VisualDensity.adaptivePlatformDensity,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              floatingActionButtonTheme: const FloatingActionButtonThemeData(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
             ),
-            floatingActionButtonTheme: const FloatingActionButtonThemeData(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+            home: Consumer<AuthProvider>(
+              builder: (context, auth, _) {
+                if (auth.isLoading) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (!auth.isAuthenticated) {
+                  auth.startWithNoAuth();
+                } else {
+                  SyncService syncService = SyncService();
+                  syncService.startSyncing();
+                }
+
+                if (auth.isPinEnabled) {
+                  // Always show PIN on startup
+                  return PinLockScreen(
+                    onPinVerified: () {
+                      // After successful PIN entry, go to Home
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const HomeScreen()),
+                      );
+                    },
+                  );
+                } else {
+                  return const HomeScreen();
+                }
+              },
             ),
-          ),
-          home: Consumer<AuthProvider>(
-            builder: (context, auth, _) {
-              if (auth.isLoading) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (!auth.isAuthenticated) {
-                auth.startWithNoAuth();
-              }else{
-                SyncService syncService = SyncService();
-                syncService.startSyncing();
-              }
 
-              if (auth.isPinEnabled) {
-                // Always show PIN on startup
-                return PinLockScreen(
-                  onPinVerified: () {
-                    // After successful PIN entry, go to Home
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const HomeScreen()),
-                    );
-                  },
-                );
-              } else {
-                return const HomeScreen();
-              }
-
+            // Define routes here if you use named routes
+            routes: {
+              //'/auth': (context) => const AuthScreen(),
+              '/home': (context) => const HomeScreen(),
+              '/login': (context) => const LoginScreen(),
+              '/signup': (context) => const SignupScreen(),
             },
-          ),
-
-          // Define routes here if you use named routes
-          routes: {
-            //'/auth': (context) => const AuthScreen(),
-            '/home': (context) => const HomeScreen(),
-            '/login': (context) => const LoginScreen(),
-            '/signup': (context) => const SignupScreen(),
-
-          },
-        );
-      })
-
+          );
+        },
+      ),
     );
   }
 }
