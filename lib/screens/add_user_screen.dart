@@ -1,5 +1,6 @@
 // This file remains the same as provided in the last response,
 // ensuring navigation to UserDebtsDetailScreen after adding a new user.
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/models/user.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +61,8 @@ class _AddUserScreenState extends State<AddUserScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.somethingWentWrong)),
+            SnackBar(content: Text(loc.somethingWentWrong),
+              backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
           );
         }
       } finally {

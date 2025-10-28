@@ -1,4 +1,5 @@
 // lib/screens/profile_edit_screen.dart
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -65,7 +66,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.failedToUpdateProfile)),
+            SnackBar(content: Text(loc.failedToUpdateProfile),
+              backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
           );
         }
       } finally {

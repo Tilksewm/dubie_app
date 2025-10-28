@@ -1,4 +1,5 @@
 // lib/screens/signup_screen.dart
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -53,7 +54,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.signupSuccess)),
+            SnackBar(content: Text(loc.signupSuccess),),
           );
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -61,7 +62,7 @@ class _SignupScreenState extends State<SignupScreen> {
         }
       } catch (e) {
         setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _errorMessage = loc.somethingWentWrong;
         });
       } finally {
         setState(() {
@@ -192,7 +193,22 @@ class _SignupScreenState extends State<SignupScreen> {
                   onPressed: () {
                     Navigator.of(context).pop(); // Go back to Login
                   },
-                  child: Text(loc.alreadyHaveAccount),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(loc.alreadyHaveAccount),
+                      const SizedBox(width: 8),
+                      Text(
+                          loc.login,
+                          style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.blue[300],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                          )
+                      ),
+                    ],
+                ),
                 ),
               ],
             ),

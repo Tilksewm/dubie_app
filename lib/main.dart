@@ -1,16 +1,19 @@
 // lib/main.dart
+import 'package:dubie_app/core/app_theme.dart';
 import 'package:dubie_app/models/comment.dart';
 import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/debt_item.dart';
 import 'package:dubie_app/models/user.dart';
 import 'package:dubie_app/providers/language_provider.dart';
 import 'package:dubie_app/providers/sync_provider.dart';
+import 'package:dubie_app/providers/theme_provider.dart';
 import 'package:dubie_app/providers/user_provider.dart';
 import 'package:dubie_app/screens/auth/login_screen.dart';
 import 'package:dubie_app/screens/auth/signup_screen.dart';
 import 'package:dubie_app/services/local_db_service.dart';
 import 'package:dubie_app/services/sync_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,8 +31,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 late HomeProvider homeProvider;
 late SyncProvider syncProvider;
+late ThemeProvider themeProvider;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge,
+    overlays: [SystemUiOverlay.top], // hide bottom bar, keep status bar
+  );
   MobileAds.instance.initialize();
   // Initialize Hive once
   await Hive.initFlutter();
@@ -64,6 +72,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _authProvider = AuthProvider(widget.prefs);
     homeProvider = HomeProvider(widget.prefs);
     syncProvider = SyncProvider();
+    themeProvider = ThemeProvider(widget.prefs);
   }
 
   @override
@@ -115,8 +124,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
         ChangeNotifierProvider<SyncProvider>.value(value: syncProvider),
         ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
+
         ChangeNotifierProvider<LanguageProvider>(
           create: (_) => LanguageProvider(widget.prefs),
         ),
@@ -129,26 +140,29 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
       ],
 
-      child: Consumer<LanguageProvider>(
-        builder: (context, langProvider, child) {
+      child: Consumer2<LanguageProvider, ThemeProvider>(
+        builder: (context, langProvider, themeProvider, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             locale: langProvider.locale,
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             title: AppLocalizations.of(context)?.appName,
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-              appBarTheme: const AppBarTheme(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              floatingActionButtonTheme: const FloatingActionButtonThemeData(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-            ),
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            // ThemeData(
+            //   primarySwatch: Colors.blue,
+            //   visualDensity: VisualDensity.adaptivePlatformDensity,
+            //   appBarTheme: const AppBarTheme(
+            //     backgroundColor: Colors.blue,
+            //     foregroundColor: Colors.white,
+            //   ),
+            //   floatingActionButtonTheme: const FloatingActionButtonThemeData(
+            //     backgroundColor: Colors.blue,
+            //     foregroundColor: Colors.white,
+            //   ),
+            // ),
             home: Consumer<AuthProvider>(
               builder: (context, auth, _) {
                 if (auth.isLoading) {

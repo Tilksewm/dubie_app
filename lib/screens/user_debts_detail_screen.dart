@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:dubie_app/app_constants.dart';
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
+import 'package:dubie_app/widgets/debt_related_functions.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:dubie_app/main.dart';
@@ -17,7 +19,6 @@ import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/screens/debt_thread_detail_screen.dart';
 import 'package:dubie_app/screens/create_debt_screen.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../models/user.dart';
 import '../widgets/item_list_without_overlap.dart';
@@ -42,7 +43,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     symbol: 'ETB ',
     decimalDigits: 2,
   );
-  late bool shouldHomeRefresh;
+  final ValueNotifier<bool> shouldHomeRefresh = ValueNotifier<bool>(false);
 
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
@@ -53,7 +54,6 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshDebts();
     });
-    shouldHomeRefresh = false;
   }
   @override
   void didChangeDependencies() {
@@ -102,14 +102,14 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
   }
 
   void inviteFriend() {
-    const inviteLink = "https://dubeapp.com/download"; // placeholder for now
-    final message = "Hey! I'm using Dubé to track debts. "
+    const inviteLink = "https://play.google.com/store/apps/details?id=com.rastechnologies.dubiedebttracker"; // placeholder for now
+    final message = "Hey! I'm using Dubie Debt Tracker to track debts. "
         "Download it here: $inviteLink";
 
     SharePlus.instance.share(
       ShareParams(
         text: message,
-        subject: "Join me on Dubé",
+        subject: "Join me on Dubie",
       )
     );
   }
@@ -145,6 +145,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
     final loc = AppLocalizations.of(context)!;
     final debtProvider = Provider.of<DebtProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
+    final colorScheme = Theme.of(context).colorScheme;
     if(userProvider.currentUser == null || debtProvider.debtsWithUser == null){
       return Scaffold(
         body: Center(child: CircularProgressIndicator(),),
@@ -168,12 +169,32 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
         if (didPop) {
           return; // Pop already occurred
         }
-        if (shouldHomeRefresh) homeProvider.fetchAllHomeData();
+        if (shouldHomeRefresh.value) homeProvider.fetchAllHomeData();
         // Manually pop with the correct value
-        Navigator.of(context).pop(shouldHomeRefresh);
+        Navigator.of(context).pop(shouldHomeRefresh.value);
     },
     child: Scaffold(
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) => Padding(
+            padding: EdgeInsets.only(left:8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.homeOnCardButtonBackground, // background color
+                shape: BoxShape.circle, // make it circular
+                border: BoxBorder.all(width: 1, color: colorScheme.homeOnCardButtonBorder),
+              ),
+              child: IconButton(
+                onPressed: () => {
+                  if (shouldHomeRefresh.value) homeProvider.fetchAllHomeData(),
+                  Navigator.of(context).pop(shouldHomeRefresh.value)
+                },
+                icon: Icon(Icons.arrow_back),
+                color: colorScheme.textBoldColor,
+              ),
+            ),
+          ),
+        ),
         title: GestureDetector(
           onTap: () {
             showDialog(
@@ -190,7 +211,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                             Center(
                               child: CircleAvatar(
                                 radius: 40,
-                                backgroundColor: Colors.teal.shade700,
+                                backgroundColor: colorScheme.avatarColor,
                                 child: Text(
                                   getInitials(userProvider.currentUser!.name),
                                   style: const TextStyle(
@@ -288,20 +309,37 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                 );
               });
             },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Text(userProvider.currentUser!.name, style: const TextStyle(fontSize: 18)),
-              Text(
-                '${loc.total}: ${currencyFormatter.format(totalAmountWithUser)}',
-                style: const TextStyle(fontSize: 14, color: Colors.white70),
+              CircleAvatar(
+                backgroundColor: colorScheme.avatarColor,
+                foregroundColor: colorScheme.onAvatarColor,
+                radius: 22,
+                child: Text(
+                    userProvider.currentUser!.name[0].toUpperCase(),
+                  style: TextStyle(fontSize: 30),
+                ),
               ),
-            ],
-          ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(userProvider.currentUser!.name, style: const TextStyle(fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${loc.total}: ${currencyFormatter.format(totalAmountWithUser)}',
+                    style: const TextStyle(fontSize: 18,),
+                  ),
+                ],
+              ),
+
+              ]
+          )
+
         ),
 
         actions: [
-          Padding(padding: EdgeInsets.fromLTRB(0, 0, 30, 0),
+          Padding(padding: EdgeInsets.only(right: 15),
             child: userStatus(userProvider.currentUser!.userType),
           )
         ],
@@ -347,7 +385,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                                 );
                                 if (result == true) {
                                   _refreshDebts(); // Refresh if a new debt was created
-                                  shouldHomeRefresh = true;
+                                  shouldHomeRefresh.value = true;
                                 }
                               },
                               icon: const Icon(Icons.add),
@@ -378,6 +416,10 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                 Color amountColor = isCreditorForThisDebtThread ? Colors.green.shade700 : Colors.red.shade700;
                 String amountPrefix = isCreditorForThisDebtThread ? '+' : '-';
                 String debtAmount = '';
+
+                final bool isCreditor = debt.creditorId == debtProvider.currentUserId;
+                final bool isBorrower = debt.borrowerId == debtProvider.currentUserId;
+
                 if(debtThread.outstandingAmount == 0){
                   debtAmount = loc.paid;
                 }else{
@@ -386,8 +428,9 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
 
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  elevation: 2,
+                  //elevation: ,
                   child: InkWell(
+
                     onTap: () async {
                       // Navigate to Debt Thread Detail Screen for this specific debt_id
                       final result = await Navigator.of(context).push(
@@ -400,7 +443,7 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                       );
                       if (result == true) {
                         _refreshDebts(); // Refresh if something changed in the debt thread
-                        shouldHomeRefresh = true;
+                        shouldHomeRefresh.value = true;
                       }
                     },
                     child: Padding(
@@ -427,10 +470,74 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                                   color: amountColor,
                                 ),
                               ),
+                              if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
+                                PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'edit') {
+                                      DebtRelatedFunctions.updateDebt(context, debtThread, onUpdate: () => _refreshDebts());
+                                      shouldHomeRefresh.value = true;
+                                    } else if (value == 'delete') {
+                                      DebtRelatedFunctions.deleteDebt(context, debtThread, "debt", onUpdate: () => _refreshDebts());
+                                      shouldHomeRefresh.value = true;
+                                    }else if (value == 'payAll'){
+                                      DebtRelatedFunctions.payAllForm(context, debtThread, onUpdate: () => _refreshDebts());
+                                      shouldHomeRefresh.value = true;
+                                    }else if (value == 'addNewItem'){
+                                      DebtRelatedFunctions.showAddItemDialog(context, debt.id, onUpdate: () => _refreshDebts());
+                                      shouldHomeRefresh.value = true;
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) => [
+                                    PopupMenuItem(
+                                      value: 'addNewItem',
+                                      child: Text(loc.addNewItem),
+                                    ),
+                                    PopupMenuItem( // custom divider
+                                      enabled: false, // not selectable
+                                      height: 10,     // shrink height
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(horizontal: 2), // padding left & right
+                                        height: 1,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'payAll',
+                                      child: Text(loc.payAll),
+                                    ),
+                                    PopupMenuItem( // custom divider
+                                      enabled: false, // not selectable
+                                      height: 10,     // shrink height
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(horizontal: 2), // padding left & right
+                                        height: 1,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text(loc.editDebt),
+                                    ),
+                                    PopupMenuItem( // custom divider
+                                      enabled: false, // not selectable
+                                      height: 10,     // shrink height
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(horizontal: 2), // padding left & right
+                                        height: 1,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text(loc.deleteDebt),
+                                    ),
+                                  ],
+                                ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          SizedBox.fromSize(child: WrapAroundChipDisplay(items: debtThread.items.map((e) => e.description).toList(),)
+                          SizedBox.fromSize(
+                              child: WrapAroundChipDisplay(items: debtThread.items.map((e) => e.description).toList(),)
                           ),
 
                           // Display items related to this debt thread
@@ -445,20 +552,20 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
                           ],
                           Text(
                             '${loc.status}: ${debt.status}', // Use original status field
-                            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: 14,  color: colorScheme.textSubTitle),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 '${loc.createdAt}: ${DateFormat.yMMMd().format(DateTime.parse(debt.createdAt))}',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                                style: TextStyle(fontSize: 12,  color: colorScheme.textSubTitle),
                               ),
                               if (debt.createdBy != null )
                                 debt.borrowerId == debtProvider.currentUserId ?
                                   Text(
                                     loc.createdByYou,
-                                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                    style: TextStyle(fontSize: 14, color: colorScheme.textSubTitle),
                                   ):
                                   Text(
                                       loc.createdBy(userProvider.currentUser!.name),
@@ -487,17 +594,20 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
           );
           if (result == true) {
             _refreshDebts(); // Refresh if a new debt was created
-            shouldHomeRefresh = true;
+            shouldHomeRefresh.value = true;
           }
         },
         child: const Icon(Icons.add),
       ),
       bottomNavigationBar: _bannerAd != null && _isBannerAdLoaded
-          ? SizedBox(
-        height: _bannerAd!.size.height.toDouble(),
-        width: _bannerAd!.size.width.toDouble(),
-        child: AdWidget(ad: _bannerAd!),
-      )
+          ?
+          SafeArea(
+              child: SizedBox(
+            height: _bannerAd!.size.height.toDouble(),
+            width: _bannerAd!.size.width.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          )
+          )
           : const SizedBox.shrink(), // Placeholder height until ad loads
     ),
     );
@@ -513,7 +623,6 @@ class _UserDebtsDetailScreenState extends State<UserDebtsDetailScreen> {
           loc.invite,
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey[600],
           ),
         ),
       );

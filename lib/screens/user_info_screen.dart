@@ -1,5 +1,6 @@
 // This file remains the same as provided in the last response,
 // ensuring navigation to UserDebtsDetailScreen after adding a new user.
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -56,12 +57,14 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             }
           }else{
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(loc.enterValidEmail)),
+              SnackBar(content: Text(loc.enterValidEmail),
+                backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
             );
           }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(loc.nameCannotBeEmpty)),
+              SnackBar(content: Text(loc.nameCannotBeEmpty),
+                backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
             );
           }
         }
@@ -69,13 +72,15 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       } on ApiException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text( loc.failedToUpdatePerson)),
+            SnackBar(content: Text( loc.failedToUpdatePerson),
+              backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.somethingWentWrong)),
+            SnackBar(content: Text(loc.somethingWentWrong),
+              backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
           );
         }
       } finally {

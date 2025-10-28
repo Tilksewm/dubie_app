@@ -1,3 +1,4 @@
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -53,13 +54,19 @@ class _DebtParticipantSwitchState extends State<DebtParticipantSwitch> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final loc = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        border: Border.all(
+          color: colorScheme.homeOnCardButtonBorder,
+          width: 1
+        ),
+        color: colorScheme.homeCardBackground,
         borderRadius: BorderRadius.circular(8.0),
       ),
+
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[

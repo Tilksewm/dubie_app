@@ -182,7 +182,7 @@ abstract class AppLocalizations {
   /// No description provided for @youBorrow.
   ///
   /// In en, this message translates to:
-  /// **'You Borrow'**
+  /// **'You Borrowed'**
   String get youBorrow;
 
   /// No description provided for @noLent.
@@ -344,7 +344,7 @@ abstract class AppLocalizations {
   /// No description provided for @noAccountSignUp.
   ///
   /// In en, this message translates to:
-  /// **'Don\'t have an account? Sign Up'**
+  /// **'Don\'t have an account?'**
   String get noAccountSignUp;
 
   /// No description provided for @signupSuccess.
@@ -368,7 +368,7 @@ abstract class AppLocalizations {
   /// No description provided for @enterYourFullName.
   ///
   /// In en, this message translates to:
-  /// **'Please enter your full name'**
+  /// **'Please enter full name'**
   String get enterYourFullName;
 
   /// No description provided for @passwordMinLength.
@@ -416,7 +416,7 @@ abstract class AppLocalizations {
   /// No description provided for @alreadyHaveAccount.
   ///
   /// In en, this message translates to:
-  /// **'Already have an account? Log In'**
+  /// **'Already have an account?'**
   String get alreadyHaveAccount;
 
   /// No description provided for @personAddedSuccessfully.

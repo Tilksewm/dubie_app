@@ -51,7 +51,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youLent => 'You Lent';
 
   @override
-  String get youBorrow => 'You Borrow';
+  String get youBorrow => 'You Borrowed';
 
   @override
   String get noLent => 'No one currently owes you money.';
@@ -132,7 +132,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterYourPassword => 'Please enter Your Password';
 
   @override
-  String get noAccountSignUp => 'Don\'t have an account? Sign Up';
+  String get noAccountSignUp => 'Don\'t have an account?';
 
   @override
   String get signupSuccess => 'Registration successful! Please check your email for verification before logging in.';
@@ -144,7 +144,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullName => 'Full Name';
 
   @override
-  String get enterYourFullName => 'Please enter your full name';
+  String get enterYourFullName => 'Please enter full name';
 
   @override
   String get passwordMinLength => 'Password must be at least 6 characters long';
@@ -168,7 +168,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterValidPhoneWithCountryCode => 'Enter a valid phone number with country code';
 
   @override
-  String get alreadyHaveAccount => 'Already have an account? Log In';
+  String get alreadyHaveAccount => 'Already have an account?';
 
   @override
   String get personAddedSuccessfully => 'Person added successfully!';

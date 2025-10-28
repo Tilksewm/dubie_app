@@ -1,3 +1,4 @@
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/models/debt.dart';
 import 'package:dubie_app/models/debt_item.dart';
@@ -65,7 +66,8 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
     final loc = AppLocalizations.of(context)!;
     if (_itemDescriptionController.text.isEmpty || _itemPriceController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.enterItemDescriptionAndPrice)),
+        SnackBar(content: Text(loc.enterItemDescriptionAndPrice),
+          backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
       );
       return;
     }
@@ -73,7 +75,8 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
     final double? price = double.tryParse(_itemPriceController.text);
     if (price == null || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.enterValidPositivePrice)),
+        SnackBar(content: Text(loc.enterValidPositivePrice),
+          backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
       );
       return;
     }
@@ -129,13 +132,15 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
       } on ApiException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.failedToCreateDebt)),
+            SnackBar(content: Text(loc.failedToCreateDebt),
+              backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.somethingWentWrong)),
+            SnackBar(content: Text(loc.somethingWentWrong),
+              backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
           );
         }
       } finally {
@@ -145,11 +150,13 @@ class _CreateDebtScreenState extends State<CreateDebtScreen> {
       }
     } else if (_selectedBorrowerId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select or search for a borrower.')),
+         SnackBar(content: Text('Please select or search for a borrower.'),
+          backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
       );
     } else if (_debtItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.addAtListOneItem)),
+        SnackBar(content: Text(loc.addAtListOneItem),
+          backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
       );
     }
   }

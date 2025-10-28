@@ -1,31 +1,33 @@
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 // Helper to build item chip
-Widget _buildItemChip({required String text, bool isOverflowChip = false}) {
+Widget _buildItemChip(BuildContext context, {required String text, bool isOverflowChip = false}) {
+  final colorScheme = Theme.of(context).colorScheme;
   return Container(
     height: 36, // Slightly increased height for better visual
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     decoration: BoxDecoration(
-      color: isOverflowChip ? Colors.blueAccent.shade700 : Colors.blue.shade50,
+      color: isOverflowChip ? Colors.blueAccent.shade700 : colorScheme.homeOnCardButtonBackground,
       borderRadius: BorderRadius.circular(18), // More rounded corners
       border: Border.all(
-        color: isOverflowChip ? Colors.blueAccent.shade700 : Colors.blue.shade100,
-        width: 1.5,
+        color: isOverflowChip ? Colors.blueAccent.shade700 : colorScheme.homeOnCardButtonBorder,
+        width: 1,
       ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-        ),
-      ],
+      // boxShadow: [
+      //   BoxShadow(
+      //     color: isOverflowChip ? Colors.blueAccent.shade700.withOpacity(0.1): Colors.blue.shade100.withOpacity(0.1),
+      //     blurRadius: 2,
+      //     offset: const Offset(0, 2),
+      //   ),
+      // ],
     ),
     child: Center(
       child: Text(
         text,
         style: TextStyle(
           fontSize: 13,
-          color: isOverflowChip ? Colors.white : Colors.blueAccent.shade700,
+          color: isOverflowChip ? Colors.white : colorScheme.textRegularColor,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -63,6 +65,7 @@ class OverlappingChipStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     List<Widget> chips = [];
     int actualVisibleCount = items.length.clamp(0, maxVisibleItems);
     double overlapOffset = 20.0; // How much each chip overlaps the previous one
@@ -93,7 +96,7 @@ class OverlappingChipStack extends StatelessWidget {
       chips.add(
         Positioned(
           left: i * overlapOffset,
-          child: _buildItemChip(text: _truncate(items[i])),
+          child: _buildItemChip(context, text: _truncate(items[i])),
         ),
       );
     }
@@ -104,6 +107,7 @@ class OverlappingChipStack extends StatelessWidget {
         Positioned(
           left: actualVisibleCount * overlapOffset,
           child: _buildItemChip(
+            context,
             text: '+${items.length - maxVisibleItems}',
             isOverflowChip: true,
           ),

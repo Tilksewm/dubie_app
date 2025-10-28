@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    final loc = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -49,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } catch (e) {
         setState(() {
-          _errorMessage = e.toString().replaceFirst('ApiException: ', '').replaceFirst('Exception: ', '');
+          _errorMessage = loc.somethingWentWrong;
         });
       } finally {
         setState(() {
@@ -148,7 +149,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(builder: (context) => const SignupScreen()),
                     );
                   },
-                  child: Text(loc.noAccountSignUp),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(loc.noAccountSignUp),
+                      const SizedBox(width: 8),
+                      Text(
+                          loc.signup,
+                          style: TextStyle(
+                            decorationColor: Colors.blue[300],
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          )
+                      ),
+                    ],
+                  )
                 ),
               ],
             ),

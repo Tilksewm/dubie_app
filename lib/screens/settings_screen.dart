@@ -1,4 +1,5 @@
 // lib/screens/settings_screen.dart
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -105,13 +106,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               if (_newPinController.text != _confirmNewPinController.text) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text('${loc.pinsDoNotMatch}!')),
+                  SnackBar(content: Text('${loc.pinsDoNotMatch}!'),
+                    backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
                 );
                 return;
               }
               if (_newPinController.text.length != 4) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text('${loc.newPinMustBe4Digits}!')),
+                  SnackBar(content: Text('${loc.newPinMustBe4Digits}!'),
+                    backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
                 );
                 return;
               }
@@ -126,7 +129,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               } catch (e) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text(loc.somethingWentWrong/*e.toString().replaceFirst('Exception: ', '')*/)),
+                  SnackBar(content: Text(loc.somethingWentWrong),
+                    backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
                 );
               } finally {
                 _currentPinController.clear();
@@ -152,8 +156,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
-          const Divider(),
-
           // PIN Code Settings
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -179,7 +181,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(loc.failedToDisablePin)),
+                    SnackBar(content: Text(loc.failedToDisablePin),
+                      backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
                   );
                 }
               }
@@ -195,6 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           ListTile(
             title: Text(loc.deleteAccountTitle),
+            enabled: authProvider.isAuthenticated, // Only enabled if user is logged in
             leading: const Icon(Icons.delete_forever, color: Colors.red),
             onTap: () {
               showDialog(
@@ -225,7 +229,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(content: Text(loc.failedDeleteAccount)),
+                            SnackBar(content: Text(loc.failedDeleteAccount),
+                              backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
                           );
                         }
                       },

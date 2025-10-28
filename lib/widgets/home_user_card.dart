@@ -1,7 +1,8 @@
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // For number formatting
-import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:dubie_app/models/user.dart';
 import 'package:dubie_app/screens/user_debts_detail_screen.dart';
 
@@ -19,23 +20,36 @@ class HomeUserCard extends StatelessWidget {
     required this.isOwedByMe,
     required this.mainUser,
   });
-  Future<void> inviteFriend() async {
-    final message = Uri.encodeComponent(
-        "Hey! I'm using Dubé to track debts. Download it here: https://dubeapp.com/download"
+  void inviteFriend() {
+    const inviteLink = "https://dubeapp.com/download"; // placeholder for now
+    final message = "Hey! I'm using Dubé to track debts. "
+        "Download it here: $inviteLink";
+
+    SharePlus.instance.share(
+        ShareParams(
+          text: message,
+          subject: "Join me on Dubé",
+        )
     );
-
-    final smsUri = Uri.parse("sms:?body=$message");
-
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(smsUri);
-    } else {
-      throw "Could not launch SMS app";
-    }
   }
+  // Future<void> inviteFriend() async {
+  //   final message = Uri.encodeComponent(
+  //       "Hey! I'm using Dubé to track debts. Download it here: https://dubeapp.com/download"
+  //   );
+  //
+  //   final smsUri = Uri.parse("sms:?body=$message");
+  //
+  //   if (await canLaunchUrl(smsUri)) {
+  //     await launchUrl(smsUri);
+  //   } else {
+  //     throw "Could not launch SMS app";
+  //   }
+  // }
 
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     // Format numbers as currency
     final NumberFormat currencyFormatter = NumberFormat.currency(
       locale: 'en_US', // Or your desired locale for currency
@@ -54,9 +68,12 @@ class HomeUserCard extends StatelessWidget {
       totalAmount = '$amountPrefix${currencyFormatter.format(homeUser.totalAmount.abs())}';
     }
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.homeOnCardButtonBorder, width: 1)),
+      color: colorScheme.homeCardBackground,
       child: InkWell(
         onTap: () async {
            Navigator.of(context).push(
@@ -92,7 +109,7 @@ class HomeUserCard extends StatelessWidget {
                         const SizedBox(height: 8),
                         SizedBox(
                           height: 40,
-                           child: OverlappingChipStack(items: homeUser.recentItems,)
+                           child: OverlappingChipStack(items: homeUser.recentItems, )
                         ),
                       ],
                     ),
@@ -123,23 +140,33 @@ class HomeUserCard extends StatelessWidget {
     );
   }
   Widget userStatus( String userStatus, BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final loc = AppLocalizations.of(context)!;
     if (userStatus == 'real') {
       return Text(
         loc.user,
         style: TextStyle(
           fontSize: 14,
-          color: Colors.green,
+          color: colorScheme.textSubTitle,
         ),
       );
     } else {
       return ElevatedButton(
+        style: ButtonStyle(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+                side: BorderSide(color: colorScheme.homeOnCardButtonBorder, width: 1),
+                borderRadius: BorderRadius.circular(10)),
+          ),
+          elevation: WidgetStateProperty.all<double>(0),
+          backgroundColor: WidgetStateProperty.all<Color>(colorScheme.homeOnCardButtonBackground),
+        ),
         onPressed: inviteFriend,
         child: Text(
           loc.invite,
           style: TextStyle(
             fontSize: 14,
-            color: Colors.green,
+            color: colorScheme.textSubTitle,
           ),
         ),
       );

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 class SyncProvider extends ChangeNotifier{
-  bool _isSynced = true;
+  bool _isSynced = false;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
   set isLoading(bool value) {

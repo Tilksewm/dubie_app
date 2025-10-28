@@ -132,13 +132,13 @@ class AppLocalizationsAm extends AppLocalizations {
   String get enterYourPassword => 'እባክዎ የ ይለፍ ቃልዎን ያስገቡ';
 
   @override
-  String get noAccountSignUp => 'አካዉንት የለዎትም? ይመዝገቡ';
+  String get noAccountSignUp => 'አካዉንት የለዎትም?';
 
   @override
   String get signupSuccess => 'ምዝገባዎ ተሳክቷል፣ እባክዎን ከመግባትዎ በፊት የላክንልዎትን ኢሜል በማየት ያረጋግጡልን።';
 
   @override
-  String get createAccount => 'አካኡንት ይክፈቱ';
+  String get createAccount => 'አካዉንት ይክፈቱ';
 
   @override
   String get fullName => 'ሙሉ ስም';
@@ -168,7 +168,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get enterValidPhoneWithCountryCode => 'እባክዎ ስልክ ቁጥርዎን ከ ሃገሩ መለያ ኮድ ጋ ያስገቡ';
 
   @override
-  String get alreadyHaveAccount => 'አካዉንት አለዎት? ይግቡ';
+  String get alreadyHaveAccount => 'አካዉንት አለዎት?';
 
   @override
   String get personAddedSuccessfully => 'ደምበኛዉ በትክክል ተመዝግቧል!';
@@ -481,7 +481,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get deleteAccountTitle => 'አካዉንቱ ይጥፋ';
 
   @override
-  String get deleteAccountWarning => 'እርግጠኛ ነዎት፤ አካዉንትዎን ማትፋት ይፈልጋሉ? መልሰዉ ማግኘት አይችሉም።';
+  String get deleteAccountWarning => 'እርግጠኛ ነዎት፤ አካዉንትዎን ማጥፋት ይፈልጋሉ? መልሰዉ ማግኘት አይችሉም።';
 
   @override
   String get accountDeletedSuccessfully => 'አካዉንትዎ በተሳካ ሁኔታ ጠፍቷል';

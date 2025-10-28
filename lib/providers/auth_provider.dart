@@ -105,7 +105,6 @@ class AuthProvider with ChangeNotifier {
       _pinAttempts = await PinStorage.getPinAttempts();
       _lastPinAttemptTime = await PinStorage.getLastPinAttemptTime();
     }
-
     _isLoading = false;
     notifyListeners();
   }

@@ -1,7 +1,9 @@
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:flutter/material.dart';
 
 // Helper to build item chip (corrected: removed internal margin)
-Widget _buildItemChip({required String text}) {
+Widget _buildItemChip(BuildContext context, {required String text}) {
+  final colorScheme = Theme.of(context).colorScheme;
   return
     Container(
     height: 36,
@@ -9,26 +11,26 @@ Widget _buildItemChip({required String text}) {
     // REMOVED: margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
     // Rely on Wrap's spacing for this
     decoration: BoxDecoration(
-      color: Colors.blue.shade50,
+      color: colorScheme.homeOnCardButtonBackground,
       borderRadius: BorderRadius.circular(18),
       border: Border.all(
-        color: Colors.blue.shade100,
+        color: colorScheme.homeOnCardButtonBorder,
         width: 1.5,
       ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-        ),
-      ],
+      // boxShadow: [
+      //   BoxShadow(
+      //     color: Colors.black.withOpacity(0.1),
+      //     blurRadius: 4,
+      //     offset: const Offset(0, 2),
+      //   ),
+      // ],
     ),
 
       child: Text(
         text,
         style: TextStyle(
           fontSize: 13,
-          color: Colors.blueAccent.shade700,
+          color: colorScheme.textBoldColor,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -53,7 +55,7 @@ class WrapAroundChipDisplay extends StatelessWidget {
     return Wrap(
       spacing: 8.0, // Horizontal space between chips
       runSpacing: 8.0, // Vertical space between rows of chips
-      children: items.map((item) => _buildItemChip(text: item)).toList(),
+      children: items.map((item) => _buildItemChip(context, text: item)).toList(),
     );
   }
 }

@@ -1,4 +1,5 @@
 
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
 import 'package:dubie_app/providers/debt_provider.dart';
 import 'package:flutter/material.dart';
@@ -6,10 +7,11 @@ import 'package:provider/provider.dart';
 
 class EditDebtForm extends StatefulWidget {
   final DebtThread debtThread;
+  final Future<void> Function() onUpdate;
 
   const EditDebtForm({
     super.key,
-    required this.debtThread,
+    required this.debtThread, required this.onUpdate,
   });
 
   @override
@@ -61,12 +63,14 @@ class _EditDebtFormState extends State<EditDebtForm> {
       debt.overallDescription = _descController.text;
       await Provider.of<DebtProvider>(context, listen: false).updateDebt(debt);
     }
+    await widget.onUpdate();
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final color = Theme.of(context).colorScheme;
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -77,14 +81,16 @@ class _EditDebtFormState extends State<EditDebtForm> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              color: Colors.blue,
+              color: color.homeCardBackground,
             ),
             child: Text(
               loc.edit,
               style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  fontSize: 18, fontWeight: FontWeight.bold,
+                  // color: Colors.white
+              ),
             ),
           ),
 
@@ -120,7 +126,7 @@ class _EditDebtFormState extends State<EditDebtForm> {
                         decoration: BoxDecoration(
                           color: item.deleted
                               ? Colors.red.withOpacity(0.2)
-                              : Colors.grey.shade100,
+                              : color.homeCardBackground,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                               color: item.deleted ? Colors.red : Colors.grey),
@@ -187,7 +193,7 @@ class _EditDebtFormState extends State<EditDebtForm> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: color.homeCardBackground,
               borderRadius:
               const BorderRadius.vertical(bottom: Radius.circular(16)),
             ),
@@ -241,15 +247,15 @@ class _DebtItemModel {
   }
 }
 
-
-// Usage
-void showEditDebtForm (BuildContext context, DebtThread debtThread){
-  showDialog(
-    context: context,
-    builder: (_) => SizedBox(
-      width: MediaQuery.of(context).size.width * 0.9,
-      height: MediaQuery.of(context).size.height * 0.7,
-      child: EditDebtForm(debtThread: debtThread),
-    ),
-  );
-}
+//
+// // Usage
+// void showEditDebtForm (BuildContext context, DebtThread debtThread){
+//   showDialog(
+//     context: context,
+//     builder: (_) => SizedBox(
+//       width: MediaQuery.of(context).size.width * 0.9,
+//       height: MediaQuery.of(context).size.height * 0.7,
+//       child: EditDebtForm(debtThread: debtThread),
+//     ),
+//   );
+// }

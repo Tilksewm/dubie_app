@@ -1,7 +1,9 @@
 // import 'dart:ffi';
 import 'dart:io';
 import 'package:dubie_app/app_constants.dart';
+import 'package:dubie_app/core/custom_colors.dart';
 import 'package:dubie_app/l10n/app_localizations.dart';
+import 'package:dubie_app/widgets/debt_related_functions.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:dubie_app/models/debt_item.dart';
@@ -44,7 +46,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
 
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
-  bool shouldHomeRefresh = false;
+  final ValueNotifier<bool> shouldHomeRefresh = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -92,58 +94,6 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       ),
     )..load();
   }
-
-  void _updateDebt (BuildContext context, DebtThread debtThread){
-    showDialog(
-        context: context,
-        builder: (_) => SizedBox(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.7,
-          child: EditDebtForm(debtThread: debtThread),
-        )
-    );
-  }
-  Future<void> _deleteDebt(BuildContext context, DebtThread debtThread) async {
-    final loc = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(loc.deleteDebt),
-        content: Text(loc.deleteDebtConfirmation),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(loc.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              // Implement delete debt logic here
-              // This usually involves an API call to your backend
-              // Then log out the user and navigate to login screen
-              // For now, just log out as a placeholder
-              try {
-                await Provider.of<DebtProvider>(context, listen: false).deleteDebt(debtThread);
-                
-                if (mounted) {
-                  Navigator.of(ctx).pop(); // Pop dialog
-                  Navigator.of(context).pop(true);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(loc.debtDeletedSuccessfully)),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text(loc.failedToDeleteDebt)),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(loc.delete, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
   Future<void> _refreshDebtDetails() async {
     await Provider.of<DebtProvider>(context, listen: false).fetchDebtDetails(widget.debtId);
   }
@@ -157,36 +107,42 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
       _commentController.clear();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.commentAddedSuccessfully)),
+          SnackBar(content: Text(loc.commentAddedSuccessfully,
+          ),
+          ),
         );
       }
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.failedToAddComment)),
+          SnackBar(content: Text(loc.failedToAddComment),
+            backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.somethingWentWrong)),
+          SnackBar(content: Text(loc.somethingWentWrong),
+            backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
         );
       }
     }
   }
 
-  Future<void> _addDebtItem() async {
+  Future<void> addDebtItem() async {
     final loc = AppLocalizations.of(context)!;
     if (_itemDescriptionController.text.isEmpty || _itemPriceController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.enterItemDescriptionAndPrice)),
+        SnackBar(content: Text(loc.enterItemDescriptionAndPrice),
+          backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
       );
       return;
     }
     final double? price = double.tryParse(_itemPriceController.text);
     if (price == null || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.enterValidPositivePrice)),
+        SnackBar(content: Text(loc.enterValidPositivePrice),
+          backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
       );
       return;
     }
@@ -207,23 +163,44 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(loc.itemAdded)),
         );
-        shouldHomeRefresh = true;
+        shouldHomeRefresh.value = true;
       }
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.failedToAddItem)),
+          SnackBar(content: Text(loc.failedToAddItem),
+            backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.somethingWentWrong)),
+          SnackBar(content: Text(loc.somethingWentWrong),
+            backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
         );
       }
     }
   }
-
+  Future <void> _payDebtItem(DebtItem debtItem) async{
+    final loc = AppLocalizations.of(context)!;
+    try {
+      await Provider.of<DebtProvider>(context, listen: false).payDebtItem(debtItem);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(loc.failedToRecordPayment),
+            backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(loc.somethingWentWrong),
+            backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
+        );
+      }
+    }
+  }
   Future<void> _payDebtItemForm(DebtItem debtItem) async {
     final loc = AppLocalizations.of(context)!;
     final TextEditingController amountController = TextEditingController(text: '${debtItem.amount - debtItem.paidAmount}');
@@ -248,120 +225,18 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
             onPressed: () async {
               final double? amount = double.tryParse(amountController.text);
               if (amount == null || amount <= 0 || (debtItem.paidAmount + amount) > debtItem.amount) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(loc.enterValidAmount)),
-                  );
-                }
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(loc.enterValidAmount),
+                    backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
+                );
+
                 return;
               }
               debtItem.paidAmount += amount;
               _payDebtItem(debtItem);
               Navigator.pop(context); // Close dialog
-              shouldHomeRefresh = true;
-            },
-            child: Text(loc.pay),
-          ),
-        ],
-      ),
-    );
-  }
-  Future <void> _payDebtItem(DebtItem debtItem) async{
-    final loc = AppLocalizations.of(context)!;
-    try {
-      await Provider.of<DebtProvider>(context, listen: false).payDebtItem(debtItem);
-    } on ApiException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.failedToRecordPayment)),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.somethingWentWrong)),
-        );
-      }
-    }
-  }
-  Future<void> _payRandomDebt(DebtThread debt, double totalAmount) async{
-    final loc = AppLocalizations.of(context)!;
-    final outstandingAmount = debt.items.map((item) => item.amount - item.paidAmount).reduce((a, b) => a + b);
-    if (totalAmount <= outstandingAmount){
-      List<DebtItem> items = debt.items;
-      try{
-        for (var item in items){
-          if (totalAmount > 0){
-            var itemOutstanding = item.amount - item.paidAmount;
-            if (totalAmount >= itemOutstanding){
-              item.paidAmount += itemOutstanding;
-              _payDebtItem(item);
-              totalAmount -= itemOutstanding;
-            }else{
-              item.paidAmount += totalAmount;
-              _payDebtItem(item);
-              totalAmount = 0;
-              break;
-            }
-          }else{ break;}
-        }
-        _refreshDebtDetails();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.paymentRecordedSuccessfully)),
-          );
-          shouldHomeRefresh = true;
-        }
-      }
-
-      on ApiException catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.failedToRecordPayment)),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.somethingWentWrong)),
-          );
-        }
-      }
-    }else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.enterAmountExceededOutstanding)
-        )
-      );
-    }
-
-    print("total payment: $totalAmount");
-  }
-  Future<void> _payAllForm(DebtThread debt) async {
-    final loc = AppLocalizations.of(context)!;
-    final outstandingAmount = debt.items.map((item) => item.amount - item.paidAmount).reduce((a,b) => (a+b));
-    final TextEditingController totalPaymentController = TextEditingController(text: "$outstandingAmount");
-
-    await showDialog(context: context, builder: (context) =>
-      AlertDialog(
-        title: Text(loc.enterTotalAmount),
-        content: TextField(
-              controller: totalPaymentController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: "${loc.paidAmount} ${currencyFormatter.format(outstandingAmount)})",
-                hintText: loc.enterTotalAmount,
-              )
-          ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(loc.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _payRandomDebt(debt, double.parse(totalPaymentController.text));
-              totalPaymentController.clear();
-              Navigator.pop(context);
+              shouldHomeRefresh.value = true;
             },
             child: Text(loc.pay),
           ),
@@ -399,7 +274,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              _addDebtItem();
+              addDebtItem();
               Navigator.pop(context); // Close dialog
             },
             child: Text(loc.add),
@@ -420,6 +295,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final loc = AppLocalizations.of(context)!;
     return PopScope<bool>(
       canPop: false,
@@ -428,10 +304,27 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
           return; // Pop already occurred
         }
         // Manually pop with the correct value
-        Navigator.of(context).pop(shouldHomeRefresh);
+        Navigator.of(context).pop(shouldHomeRefresh.value);
       },
       child: Scaffold(
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) => Padding(
+            padding: EdgeInsets.only(left:8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.homeOnCardButtonBackground, // background color
+                shape: BoxShape.circle, // make it circular
+                border: BoxBorder.all(width: 1, color: colorScheme.homeOnCardButtonBorder),
+              ),
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(shouldHomeRefresh.value),
+                icon: Icon(Icons.arrow_back),
+                color: colorScheme.textBoldColor,
+              ),
+            ),
+          ),
+        ),
         title: Consumer<DebtProvider>(
           builder: (context, debtProvider, child) {
             final debtThread = debtProvider.currentDebt;
@@ -452,7 +345,7 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
                 Text("$titleText ${loc.items}", style: const TextStyle(fontSize: 18)),
                 Text(
                   '${loc.paidAmount} ${currencyFormatter.format(totalPaid.abs())} / $totalAmount',
-                  style: TextStyle(fontSize: 14, color: Colors.black),
+                  style: TextStyle(fontSize: 14,),
                 ),
               ],
             );
@@ -517,229 +410,257 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               children: [
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.all(16.0),
+                    //padding: const EdgeInsets.all(16.0),
                     children: [
-                      // Debt Status and Actions
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
+                      Padding(
+                          padding: EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${loc.status}: ${debt.status}',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: _getStatusColor(debt.status),
+                                              ),
+                                            ),
+                                            if (debt.overallDescription != null && debt.overallDescription!.isNotEmpty)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 8.0),
+                                                child: Text('${debt.overallDescription}'),
+                                              ),
+                                          ],
+                                        ),
+                                        if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
+                                          PopupMenuButton<String>(
+                                            onSelected: (value) {
+                                              if (value == 'edit') {
+                                                DebtRelatedFunctions.updateDebt(context, debtThread, onUpdate: () async => {});
+                                                shouldHomeRefresh.value = true;
+                                              } else if (value == 'delete') {
+                                                DebtRelatedFunctions.deleteDebt(context, debtThread, "debtThread", onUpdate: () async => {});
+                                                shouldHomeRefresh.value = true;
+                                              }
+                                            },
+                                            itemBuilder: (BuildContext context) => [
+                                              PopupMenuItem(
+                                                value: 'edit',
+                                                child: Text(loc.editDebt),
+                                              ),
+                                              PopupMenuItem( // custom divider
+                                                enabled: false, // not selectable
+                                                height: 10,     // shrink height
+                                                child: Container(
+                                                  margin: EdgeInsets.symmetric(horizontal: 2), // padding left & right
+                                                  height: 1,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                              PopupMenuItem(
+                                                value: 'delete',
+                                                child: Text(loc.deleteDebt),
+                                              ),
+                                            ],
+                                          ),
+                                      ],
+                                    ),
+
+
+                                    const SizedBox(height: 16),
+                                    // Action Buttons based on status and role
+                                    _buildActionButtons(debt, isCreditor, isBorrower, debtProvider),
+                                  ],
+                                ),
+                              ),
+
+                              // Debt Items
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${loc.status}: ${debt.status}',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: _getStatusColor(debt.status),
-                                        ),
-                                      ),
-                                      if (debt.overallDescription != null && debt.overallDescription!.isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 8.0),
-                                          child: Text('${debt.overallDescription}'),
-                                        ),
-                                    ],
-                                  ),
+                                  Text(loc.dubieItems, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                                   if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
-                                  PopupMenuButton<String>(
-                                    onSelected: (value) {
-                                      if (value == 'edit') {
-                                        _updateDebt(context, debtThread);
-                                      } else if (value == 'delete') {
-                                        _deleteDebt(context, debtThread);
-                                      }
-                                    },
-                                    itemBuilder: (BuildContext context) => [
-                                      PopupMenuItem(
-                                        value: 'edit',
-                                        child: Text(loc.editDebt),
-                                      ),
-                                      PopupMenuItem( // custom divider
-                                        enabled: false, // not selectable
-                                        height: 10,     // shrink height
-                                        child: Container(
-                                          margin: EdgeInsets.symmetric(horizontal: 2), // padding left & right
-                                          height: 1,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'delete',
-                                        child: Text(loc.deleteDebt),
-                                      ),
-                                    ],
-                                  ),
+                                    ElevatedButton.icon(
+                                      onPressed: () => DebtRelatedFunctions.payAllForm(context, debtThread, onUpdate: () async => {}),
+                                      icon: Icon(Icons.payments),
+                                      label: Text(loc.payAll),
+                                    )
                                 ],
                               ),
+                              const SizedBox(height: 8),
+                              if (debtThread.items.isEmpty)
+                                Text(loc.noItemsInThisDubie, style: TextStyle(color: Colors.grey)),
+                              ...debtThread.items.map((item) {
+                                final Color itemStatusColor = item.isPaid ? Colors.green : Colors.orange;
+                                final String itemStatusText = item.isPaid ? loc.paid : loc.pending;
+                                final double remainingAmount = item.amount - item.paidAmount;
 
-
+                                return Card(
+                                  margin: const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: ListTile(
+                                    title: Text(item.description),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('${loc.amount}: ${currencyFormatter.format(item.amount)}'),
+                                        Text('${loc.paidAmount}: ${currencyFormatter.format(item.paidAmount)}'),
+                                        Text(
+                                          '$itemStatusText ${item.isPaid ? '' : '(${loc.remaining}: ${currencyFormatter.format(remainingAmount)})'}',
+                                          style: TextStyle(color: itemStatusColor, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: item.isPaid ?
+                                    Text(loc.paid, style: TextStyle(color: Colors.green, fontSize: 16),):
+                                    ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
+                                        ? IconButton(
+                                      icon: const Icon(Icons.payment, color: Colors.blue),
+                                      onPressed: debtProvider.isActionInProgress
+                                          ? null
+                                          : () => _payDebtItemForm(item),
+                                    )
+                                        : null,
+                                  ),
+                                );
+                              }).toList(),
                               const SizedBox(height: 16),
-                              // Action Buttons based on status and role
-                              _buildActionButtons(debt, isCreditor, isBorrower, debtProvider),
+
                             ],
-                          ),
-                        ),
-
-                      // Debt Items
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(loc.dubieItems, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
-                          ElevatedButton.icon(
-                              onPressed: () => _payAllForm(debtThread),
-                              icon: Icon(Icons.payments),
-                            label: Text(loc.payAll),
                           )
-                        ],
                       ),
-                      const SizedBox(height: 8),
-                      if (debtThread.items.isEmpty)
-                        Text(loc.noItemsInThisDubie, style: TextStyle(color: Colors.grey)),
-                      ...debtThread.items.map((item) {
-                        final Color itemStatusColor = item.isPaid ? Colors.green : Colors.orange;
-                        final String itemStatusText = item.isPaid ? loc.paid : loc.pending;
-                        final double remainingAmount = item.amount - item.paidAmount;
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: ListTile(
-                            title: Text(item.description),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${loc.amount}: ${currencyFormatter.format(item.amount)}'),
-                                Text('${loc.paidAmount}: ${currencyFormatter.format(item.paidAmount)}'),
-                                Text(
-                                  '$itemStatusText ${item.isPaid ? '' : '(${loc.remaining}: ${currencyFormatter.format(remainingAmount)})'}',
-                                  style: TextStyle(color: itemStatusColor, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                            trailing: item.isPaid ?
-                                Text(loc.paid, style: TextStyle(color: Colors.green, fontSize: 16),):
-                               ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
-                                ? IconButton(
-                              icon: const Icon(Icons.payment, color: Colors.blue),
-                              onPressed: debtProvider.isActionInProgress
-                                  ? null
-                                  : () => _payDebtItemForm(item),
-                            )
-                                : null,
-                          ),
-                        );
-                      }).toList(),
-                      const SizedBox(height: 16),
-
-                      // Add New Item
                       if ((debt.createdBy != null && isBorrower) || (isCreditor && debt.createdBy == null) )
-                        ElevatedButton.icon(
-                          onPressed: debtProvider.isActionInProgress ? null : _showAddItemDialog,
-                          icon: const Icon(Icons.add_shopping_cart),
-                          label: Text(loc.addNewItem),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent, // Use a distinct color
-                            foregroundColor: Colors.white,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          // Add New Item
+                        child: ElevatedButton.icon(
+                            onPressed: debtProvider.isActionInProgress ? null : _showAddItemDialog,
+                            icon: const Icon(Icons.add_shopping_cart),
+                            label: Text(loc.addNewItem),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent, // Use a distinct color
+                              foregroundColor: Colors.white,
+                            ),
                           ),
-                        ),
+                      ),
+
                       const SizedBox(height: 24),
 
+                      // Debt Status and Actions
+                                           // Banner ad
                       _bannerAd != null && _isBannerAdLoaded
-                          ? SizedBox(
-                        height: _bannerAd!.size.height.toDouble(),
-                        width: _bannerAd!.size.width.toDouble(),
-                        child: AdWidget(ad: _bannerAd!),
-                      )
+                          ?
+                          SizedBox(
+                              height: _bannerAd!.size.height.toDouble(),
+                              width: _bannerAd!.size.width.toDouble(),
+                              child: AdWidget(ad: _bannerAd!),
+                          )
                           : const SizedBox.shrink(), // Placeholder height until ad loads
 
                       const SizedBox(height: 24),
-                      // Comments Section
-                      Text('${loc.comments}:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      if (debtProvider.isLoadingComments && debtProvider.comments == null)
-                        const Center(child: CircularProgressIndicator())
-                      else if (debtProvider.commentsError != null)
-                        Center(child: Text('${loc.errorLoadingComments}: ${debtProvider.commentsError}'))
-                      else if (debtProvider.comments!.isEmpty)
-                          Text(loc.noCommentsYet, style: const TextStyle(color: Colors.grey)),
-                      if (debtProvider.comments != null)
-                        ...debtProvider.comments!.map((comment) {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ChatMessageWidget(
-                              message: comment.comment,
-                              currentUserId: debtProvider.currentUserId!,
-                            )
-                            // Row(
-                            //   crossAxisAlignment: CrossAxisAlignment.start,
-                            //   children: [
-                            //     CircleAvatar(
-                            //       radius: 20,
-                            //       backgroundColor: Colors.blueGrey,
-                            //       child: Text (
-                            //         comment.commenterName.substring(0, 1).toUpperCase(),
-                            //         style: const TextStyle(color: Colors.white),
-                            //       ),
-                            //     ),
-                            //     const SizedBox(width: 8),
-                            //     Expanded(
-                            //       child: Column(
-                            //         crossAxisAlignment: CrossAxisAlignment.start,
-                            //         children: [
-                            //           Text(
-                            //             comment.commenterName ?? 'Anonymous',
-                            //             style: const TextStyle(fontWeight: FontWeight.bold),
-                            //           ),
-                            //           Text(comment.comment.commentText),
-                            //           Text(
-                            //             DateFormat.yMMMd().add_jm().format(DateTime.parse(comment.comment.createdAt)),
-                            //             style: const TextStyle(fontSize: 10, color: Colors.grey),
-                            //           ),
-                            //         ],
-                            //       ),
-                            //     ),
-                            //   ],
-                            // ),
-                          );
-                        }),
+                      Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Comments Section
+                              Text('${loc.comments}:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              if (debtProvider.isLoadingComments && debtProvider.comments == null)
+                                const Center(child: CircularProgressIndicator())
+                              else if (debtProvider.commentsError != null)
+                                Center(child: Text('${loc.errorLoadingComments}: ${debtProvider.commentsError}'))
+                              else if (debtProvider.comments!.isEmpty)
+                                  Text(loc.noCommentsYet, style: const TextStyle(color: Colors.grey)),
+                              if (debtProvider.comments != null)
+                                ...debtProvider.comments!.map((comment) {
+                                  return Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: ChatMessageWidget(
+                                        message: comment.comment,
+                                        currentUserId: debtProvider.currentUserId!,
+                                      )
+                                    // Row(
+                                    //   crossAxisAlignment: CrossAxisAlignment.start,
+                                    //   children: [
+                                    //     CircleAvatar(
+                                    //       radius: 20,
+                                    //       backgroundColor: Colors.blueGrey,
+                                    //       child: Text (
+                                    //         comment.commenterName.substring(0, 1).toUpperCase(),
+                                    //         style: const TextStyle(color: Colors.white),
+                                    //       ),
+                                    //     ),
+                                    //     const SizedBox(width: 8),
+                                    //     Expanded(
+                                    //       child: Column(
+                                    //         crossAxisAlignment: CrossAxisAlignment.start,
+                                    //         children: [
+                                    //           Text(
+                                    //             comment.commenterName ?? 'Anonymous',
+                                    //             style: const TextStyle(fontWeight: FontWeight.bold),
+                                    //           ),
+                                    //           Text(comment.comment.commentText),
+                                    //           Text(
+                                    //             DateFormat.yMMMd().add_jm().format(DateTime.parse(comment.comment.createdAt)),
+                                    //             style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                    //           ),
+                                    //         ],
+                                    //       ),
+                                    //     ),
+                                    //   ],
+                                    // ),
+                                  );
+                                }),
+                            ],
+                          )
+                      ),
                     ],
                   ),
                 ),
                 // Comment Input Box
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _commentController,
-                          decoration: InputDecoration(
-                            hintText: loc.addCommentHint,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20.0),
+                SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _commentController,
+                              decoration: InputDecoration(
+                                hintText: loc.addCommentHint,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              ),
+                              maxLines: null, // Allows multiline input
+                              minLines: 1,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           ),
-                          maxLines: null, // Allows multiline input
-                          minLines: 1,
-                        ),
+                          const SizedBox(width: 8),
+                          debtProvider.isActionInProgress
+                              ? const CircularProgressIndicator()
+                              : IconButton(
+                            icon: const Icon(Icons.send, color: Colors.green),
+                            onPressed: _addComment,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      debtProvider.isActionInProgress
-                          ? const CircularProgressIndicator()
-                          : IconButton(
-                        icon: const Icon(Icons.send, color: Colors.green),
-                        onPressed: _addComment,
-                      ),
-                    ],
-                  ),
+                    ),
                 ),
+
               ],
             ),
           );
@@ -772,7 +693,8 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
             } on ApiException catch (e) {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc.faildToAcceptDebt)),
+                  SnackBar(content: Text(loc.faildToAcceptDebt),
+                    backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
                 );
               }
             }
@@ -788,13 +710,15 @@ class _DebtThreadDetailScreenState extends State<DebtThreadDetailScreen> {
               await debtProvider.rejectDebt(debt);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${loc.debtRejected}!')),
+                  SnackBar(content: Text('${loc.debtRejected}!'),
+                    backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
                 );
               }
             } on ApiException catch (e) {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc.failedToRejectDebt)),
+                  SnackBar(content: Text(loc.failedToRejectDebt),
+                    backgroundColor: Theme.of(context).colorScheme.withdrawColor,),
                 );
               }
             }
