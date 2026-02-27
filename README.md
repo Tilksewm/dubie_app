@@ -1,6 +1,11 @@
 # dubie_app
 
-A new Flutter project.
+Dubie (ዱቤ) is a mobile application designed to help users manage personal debts by tracking 
+who they owe money to and who owes money to them. The system allows users to create debt 
+records, manage debt items, record payments, exchange comments, and track verification and 
+acceptance states between involved parties. 
+The application communicates with a backend service through a RESTful API and is intended to 
+be fast, reliable, and easy to use on modern smartphones.
 
 ## Getting Started
 
