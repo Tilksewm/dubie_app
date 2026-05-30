@@ -19,9 +19,9 @@ class RemoteApiService {
 
   final http.Client _httpClient;
 
-  RemoteApiService(this.prefs) :
-        _secureStorage = const FlutterSecureStorage(),
-        _httpClient = http.Client();
+  RemoteApiService(this.prefs)
+    : _secureStorage = const FlutterSecureStorage(),
+      _httpClient = http.Client();
 
   String? _getJwtToken() {
     return prefs.getString('jwt_token');
@@ -70,9 +70,9 @@ class RemoteApiService {
 
   // --- Core Request Method ---
   Future<http.Response> _sendRequest(
-      Future<http.Response> Function() requestBuilder, {
-        bool includeAuth = true,
-      }) async {
+    Future<http.Response> Function() requestBuilder, {
+    bool includeAuth = true,
+  }) async {
     try {
       final response = await requestBuilder();
       return response;
@@ -92,7 +92,7 @@ class RemoteApiService {
   }) async {
     final url = Uri.parse('$baseUrl/auth/signup');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(includeAuth: false),
         body: json.encode({
@@ -114,18 +114,18 @@ class RemoteApiService {
   }) async {
     final url = Uri.parse('$baseUrl/auth/signin');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(includeAuth: false),
-        body: json.encode({
-          'email': email,
-          'password': password,
-        }),
+        body: json.encode({'email': email, 'password': password}),
       ),
       includeAuth: false,
     );
     final data = _handleResponse(response);
-    if (data.containsKey('token') && data['token'] != null && data.containsKey('user') && data['user'] != null) {
+    if (data.containsKey('token') &&
+        data['token'] != null &&
+        data.containsKey('user') &&
+        data['user'] != null) {
       final userData = data['user'];
       await _saveAuthData(
         jwtToken: data['token'],
@@ -145,11 +145,11 @@ class RemoteApiService {
   Future<void> signout() async {
     final url = Uri.parse('$baseUrl/auth/signout');
     try {
-      await _sendRequest(
-            () => _httpClient.post(url, headers: _getHeaders()),
-      );
+      await _sendRequest(() => _httpClient.post(url, headers: _getHeaders()));
     } catch (e) {
-      print('Error during backend signout (expected if token expired/no blacklisting): $e');
+      print(
+        'Error during backend signout (expected if token expired/no blacklisting): $e',
+      );
     } finally {
       await _clearAuthData();
     }
@@ -163,7 +163,7 @@ class RemoteApiService {
     }
     final url = Uri.parse('$baseUrl/auth/profile');
     final response = await _sendRequest(
-          () => _httpClient.get(url, headers: _getHeaders()),
+      () => _httpClient.get(url, headers: _getHeaders()),
     );
     final data = _handleResponse(response);
     return User.fromJson(data);
@@ -185,11 +185,8 @@ class RemoteApiService {
     if (phone != null) body['phone'] = phone;
 
     final response = await _sendRequest(
-          () => _httpClient.put(
-        url,
-        headers: _getHeaders(),
-        body: json.encode(body),
-      ),
+      () =>
+          _httpClient.put(url, headers: _getHeaders(), body: json.encode(body)),
     );
     final data = _handleResponse(response);
     return User.fromJson(data['user']);
@@ -198,7 +195,9 @@ class RemoteApiService {
   // --- Home Screen Endpoints ---
   Future<Map<String, double>> getHomeSummary() async {
     final url = Uri.parse('$baseUrl/users/home/summary');
-    final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
+    final response = await _sendRequest(
+      () => _httpClient.get(url, headers: _getHeaders()),
+    );
     final data = _handleResponse(response);
     return {
       'borrow': (data['borrow'] as num).toDouble(),
@@ -208,22 +207,33 @@ class RemoteApiService {
 
   Future<List<HomeUser>> getHomeUsers({required String filter}) async {
     final url = Uri.parse('$baseUrl/users/home/users?filter=$filter');
-    final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
+    final response = await _sendRequest(
+      () => _httpClient.get(url, headers: _getHeaders()),
+    );
     final List<dynamic> jsonList = _handleResponse(response);
     return jsonList.map((json) => HomeUser.fromJson(json)).toList();
   }
-  Future<User> getUserInfo( String userId) async{
+
+  Future<User> getUserInfo(String userId) async {
     final url = Uri.parse('$baseUrl/users/$userId');
     final response = await _sendRequest(
-          () => _httpClient.get(
-        url,
-        headers: _getHeaders(),
-      ),
+      () => _httpClient.get(url, headers: _getHeaders()),
     );
     final data = _handleResponse(response);
 
     return User.fromJson(data);
   }
+
+  Future<User> deleteUser(String userId) async {
+    final url = Uri.parse('$baseUrl/users/delete_user/$userId');
+    final response = await _sendRequest(
+      () => _httpClient.delete(url, headers: _getHeaders()),
+    );
+    final data = _handleResponse(response);
+
+    return User.fromJson(data);
+  }
+
   Future<User> createPlaceholderUser({
     required String name,
     String? phone,
@@ -232,7 +242,7 @@ class RemoteApiService {
   }) async {
     final url = Uri.parse('$baseUrl/users/home/users');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(),
         body: json.encode({
@@ -246,10 +256,17 @@ class RemoteApiService {
     final data = _handleResponse(response);
     return User.fromJson(data['user']);
   }
-  Future<User> editTemporaryUser(String userId, {required String name, String? phone, String? email, String? username}) async {
+
+  Future<User> editTemporaryUser(
+    String userId, {
+    required String name,
+    String? phone,
+    String? email,
+    String? username,
+  }) async {
     final url = Uri.parse('$baseUrl/users/home/$userId/edit');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(),
         body: json.encode({
@@ -268,7 +285,9 @@ class RemoteApiService {
   // --- Debt Endpoints ---
   Future<List<Debt>> getDebtThreadsWithUser(String otherUserId) async {
     final url = Uri.parse('$baseUrl/debts/threads-with-user/$otherUserId');
-    final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
+    final response = await _sendRequest(
+      () => _httpClient.get(url, headers: _getHeaders()),
+    );
     final List<dynamic> jsonList = _handleResponse(response);
     return jsonList.map((json) => Debt.fromJson(json)).toList();
   }
@@ -280,7 +299,7 @@ class RemoteApiService {
   }) async {
     final url = Uri.parse('$baseUrl/debts');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(),
         body: json.encode({
@@ -297,28 +316,27 @@ class RemoteApiService {
   Future<Debt> getDebtById(String debtId) async {
     final url = Uri.parse('$baseUrl/debts/$debtId');
     final response = await _sendRequest(
-          () => _httpClient.get(url, headers: _getHeaders()),
+      () => _httpClient.get(url, headers: _getHeaders()),
     );
     final data = _handleResponse(response);
     return Debt.fromJson(data);
   }
+
   Future<void> deleteDebt(String debtId) async {
     final url = Uri.parse('$baseUrl/debts/$debtId');
     final response = await _sendRequest(
-          () => _httpClient.delete(
-        url,
-        headers: _getHeaders(),
-      ),
+      () => _httpClient.delete(url, headers: _getHeaders()),
     );
     final data = _handleResponse(response);
     if (kDebugMode) {
       print(data);
     }
   }
+
   Future<Debt> updateDebtDescription(String debtId, String description) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/update-description');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(),
         body: json.encode({'description': description}),
@@ -328,14 +346,15 @@ class RemoteApiService {
     return Debt.fromJson(data['debt']);
   }
 
-  Future<DebtItem> addDebtItem(String debtId, {
+  Future<DebtItem> addDebtItem(
+    String debtId, {
     required String description,
     required double price,
     double? paidAmount,
   }) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/items');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(),
         body: json.encode({
@@ -349,14 +368,16 @@ class RemoteApiService {
     return DebtItem.fromJson(data['item']);
   }
 
-  Future<void> updateDebtItem(String debtId, String itemId, {
+  Future<void> updateDebtItem(
+    String debtId,
+    String itemId, {
     String? description,
     double? price,
     double? paidAmount,
   }) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/items/$itemId/edit');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(),
         body: json.encode({
@@ -369,10 +390,11 @@ class RemoteApiService {
     final data = _handleResponse(response);
     //return DebtItem.fromJson(data['item']);
   }
+
   Future<void> deleteDebtItem(String debtId, String debtItemId) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/items/$debtItemId');
     final response = await _sendRequest(
-          () => _httpClient.delete(
+      () => _httpClient.delete(
         url,
         headers: _getHeaders(),
 
@@ -386,16 +408,18 @@ class RemoteApiService {
       print(data);
     }
   }
-  Future<DebtItem> payDebtItem(String debtId, String itemId, double paidAmount) async {
+
+  Future<DebtItem> payDebtItem(
+    String debtId,
+    String itemId,
+    double paidAmount,
+  ) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/pay');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(),
-        body: json.encode({
-          'item_id': itemId,
-          'paid_amount': paidAmount,
-        }),
+        body: json.encode({'item_id': itemId, 'paid_amount': paidAmount}),
       ),
     );
     final data = _handleResponse(response);
@@ -405,7 +429,7 @@ class RemoteApiService {
   Future<Debt> acceptDebt(String debtId) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/accept');
     final response = await _sendRequest(
-          () => _httpClient.post(url, headers: _getHeaders()),
+      () => _httpClient.post(url, headers: _getHeaders()),
     );
     final data = _handleResponse(response);
     return Debt.fromJson(data['debt']);
@@ -414,7 +438,7 @@ class RemoteApiService {
   Future<Debt> rejectDebt(String debtId) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/reject');
     final response = await _sendRequest(
-          () => _httpClient.post(url, headers: _getHeaders()),
+      () => _httpClient.post(url, headers: _getHeaders()),
     );
     final data = _handleResponse(response);
     return Debt.fromJson(data['debt']);
@@ -423,7 +447,9 @@ class RemoteApiService {
   // --- Comments Endpoints ---
   Future<List<Comment>> getCommentsForDebt(String debtId) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/comments');
-    final response = await _sendRequest(() => _httpClient.get(url, headers: _getHeaders()));
+    final response = await _sendRequest(
+      () => _httpClient.get(url, headers: _getHeaders()),
+    );
     final List<dynamic> jsonList = _handleResponse(response);
     return jsonList.map((json) => Comment.fromJson(json)).toList();
   }
@@ -431,7 +457,7 @@ class RemoteApiService {
   Future<Comment> addCommentToDebt(String debtId, String commentText) async {
     final url = Uri.parse('$baseUrl/debts/$debtId/comments');
     final response = await _sendRequest(
-          () => _httpClient.post(
+      () => _httpClient.post(
         url,
         headers: _getHeaders(),
         body: json.encode({'comment': commentText}),
@@ -453,7 +479,9 @@ class RemoteApiService {
       try {
         errorData = json.decode(response.body);
       } catch (e) {
-        errorData = {'error': 'Unauthorized or Forbidden. Status: ${response.statusCode}'};
+        errorData = {
+          'error': 'Unauthorized or Forbidden. Status: ${response.statusCode}',
+        };
       }
       throw ApiException(
         'Session Invalid: ${errorData['error'] ?? 'Unauthorized or Forbidden'}. Please log in again.',
@@ -465,7 +493,9 @@ class RemoteApiService {
       try {
         errorData = json.decode(response.body);
       } catch (e) {
-        errorData = {'error': 'An unknown error occurred. Status: ${response.statusCode}'};
+        errorData = {
+          'error': 'An unknown error occurred. Status: ${response.statusCode}',
+        };
       }
       throw ApiException(
         errorData['error'] ?? 'Unknown API error',
@@ -474,7 +504,6 @@ class RemoteApiService {
       );
     }
   }
-
 }
 
 class ApiException implements Exception {

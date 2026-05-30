@@ -18,7 +18,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -40,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Future<void> _refreshHomeData() async {
     await Provider.of<HomeProvider>(context, listen: false).fetchAllHomeData();
   }
+
   // New: Method to manually lock the app
   void _lockAppManually() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -56,16 +58,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       );
     } else {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-            builder: (ctx) => SettingsScreen(),
-        )
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PIN lock is not enabled.')),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (ctx) => SettingsScreen()));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('PIN lock is not enabled.')));
     }
   }
+
   String getInitials(String fullName) {
     final parts = fullName.trim().split(" ");
     if (parts.length == 1) return parts[0][0].toUpperCase();
@@ -105,13 +106,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Text(
-                  user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : '?',
+                  user?.name.isNotEmpty == true
+                      ? user!.name[0].toUpperCase()
+                      : '?',
                   style: const TextStyle(fontSize: 40.0, color: Colors.blue),
                 ),
               ),
-              decoration: const BoxDecoration(
-                color: Colors.blue,
-              ),
+              decoration: const BoxDecoration(color: Colors.blue),
             ),
             ListTile(
               leading: const Icon(Icons.person),
@@ -121,9 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
-
-                    content:
-                    Column(
+                    content: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -173,7 +172,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                           const SizedBox(height: 10),
                         ],
-                        if (user.username != null && user.username!.isNotEmpty) ...[
+                        if (user.username != null &&
+                            user.username!.isNotEmpty) ...[
                           Row(
                             children: [
                               const Icon(Icons.person, color: Colors.teal),
@@ -195,7 +195,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         onPressed: () async {
                           Navigator.of(ctx).pop(); // Close current dialog
                           await Navigator.of(context).push(
-                            MaterialPageRoute(builder: (ctx) => const ProfileEditScreen()),
+                            MaterialPageRoute(
+                              builder: (ctx) => const ProfileEditScreen(),
+                            ),
                           );
                           // Refresh profile data in drawer after editing
                           authProvider.refreshProfileData();
@@ -224,7 +226,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 Navigator.pop(context); // Close the drawer first
                 await authProvider.logout();
                 if (mounted) {
-                  Navigator.of(context).pushReplacementNamed('/login'); // Corrected from /auth
+                  Navigator.of(
+                    context,
+                  ).pushReplacementNamed('/login'); // Corrected from /auth
                 }
               },
             ),
@@ -238,105 +242,315 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               : homeProvider.summaryError != null
               ? RefreshIndicator(
                   onRefresh: _refreshHomeData,
-                  child: Center(child: Text('Error: ${homeProvider.summaryError}')),
-              )
+                  child: Center(
+                    child: Text('Error: ${homeProvider.summaryError}'),
+                  ),
+                )
               :
-          // Home Summary Cards
-          TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(
-                child:
-                Column(
-                  children: [
-                    Text('You Lent', style: TextStyle(fontSize: 14)),
-                    const SizedBox(height: 4),
-                    Text(
-                      currencyFormatter.format(homeProvider.homeSummary?['lent'] ?? 0.0),
-                      style: TextStyle(fontSize: 12, color: Colors.green.shade700, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-              Tab(
-                child:// Borrowers (users who owe current user)
-                Column(
-                  children: [
-                    Text('You Borrow', style: TextStyle(fontSize: 14)),
-                    const SizedBox(height: 4),
-                    Text(
-                      currencyFormatter.format(homeProvider.homeSummary?['borrow'] ?? 0.0),
-                      style: TextStyle(fontSize: 12, color: Colors.red.shade700, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              )// Creditors (users current user owes)
-            ],
-            labelColor: Colors.black,
-            unselectedLabelColor: Colors.black87,
-            indicatorColor: Colors.black,
-          ),
-          Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refreshHomeData,
-                child:
-                TabBarView(
+                // Home Summary Cards
+                TabBar(
                   controller: _tabController,
-                  children: [
-
-                    // "Owes You" Tab (Borrowers)
-                    homeProvider.isLoadingBorrowers
-                        ? const Center(child: CircularProgressIndicator())
-                        : homeProvider.borrowersError != null
-                        ?
-                    RefreshIndicator(
-                      onRefresh: _refreshHomeData,
-                      child: Center(child: Text('Error: ${homeProvider.borrowersError}'))
-                    )
-                        : homeProvider.borrowers!.isEmpty
-                        ?
-                    RefreshIndicator(
-                        onRefresh: _refreshHomeData,
-                        child: const Center(child: Text('No one currently owes you money.'))
-                    )
-                        :
-                    RefreshIndicator( // Added RefreshIndicator
-                      onRefresh: _refreshHomeData,
-                      child: ListView.builder(
-                        itemCount: homeProvider.borrowers!.length,
-                        itemBuilder: (context, index) {
-                          final user = homeProvider.borrowers![index];
-                          return HomeUserCard(
-                            homeUser: user,
-                            isOwedByMe: true, // They owe me
-                          );
-                        },
+                  tabs: [
+                    Tab(
+                      child: Column(
+                        children: [
+                          Text('You Lent', style: TextStyle(fontSize: 14)),
+                          const SizedBox(height: 4),
+                          Text(
+                            currencyFormatter.format(
+                              homeProvider.homeSummary?['lent'] ?? 0.0,
+                            ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-
-                    // "You Owe" Tab (Creditors)
-                    homeProvider.isLoadingCreditors
-                        ? const Center(child: CircularProgressIndicator())
-                        : homeProvider.creditorsError != null
-                        ? Center(child: Text('Error: ${homeProvider.creditorsError}'))
-                        : homeProvider.creditors!.isEmpty
-                        ? const Center(child: Text('No one you currently owe money to.'))
-                        : RefreshIndicator( // Added RefreshIndicator
-                      onRefresh: _refreshHomeData,
-                      child: ListView.builder(
-                        itemCount: homeProvider.creditors!.length,
-                        itemBuilder: (context, index) {
-                          final user = homeProvider.creditors![index];
-                          return HomeUserCard(
-                            homeUser: user,
-                            isOwedByMe: false, // I owe them
-                          );
-                        },
+                    Tab(
+                      child: // Borrowers (users who owe current user)
+                      Column(
+                        children: [
+                          Text('You Borrow', style: TextStyle(fontSize: 14)),
+                          const SizedBox(height: 4),
+                          Text(
+                            currencyFormatter.format(
+                              homeProvider.homeSummary?['borrow'] ?? 0.0,
+                            ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.red.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ), // Creditors (users current user owes)
                   ],
+                  labelColor: Colors.black,
+                  unselectedLabelColor: Colors.black87,
+                  indicatorColor: Colors.black,
                 ),
-              )
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refreshHomeData,
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // "Owes You" Tab (Borrowers)
+                  homeProvider.isLoadingBorrowers
+                      ? const Center(child: CircularProgressIndicator())
+                      : homeProvider.borrowersError != null
+                      ? RefreshIndicator(
+                          onRefresh: _refreshHomeData,
+                          child: Center(
+                            child: Text(
+                              'Error: ${homeProvider.borrowersError}',
+                            ),
+                          ),
+                        )
+                      : homeProvider.borrowers!.isEmpty
+                      ? RefreshIndicator(
+                          onRefresh: _refreshHomeData,
+                          child: const Center(
+                            child: Text('No one currently owes you money.'),
+                          ),
+                        )
+                      : RefreshIndicator(
+                          // Added RefreshIndicator
+                          onRefresh: _refreshHomeData,
+                          child: ListView.builder(
+                            itemCount: homeProvider.borrowers!.length,
+                            itemBuilder: (context, index) {
+                              final user = homeProvider.borrowers![index];
+                              return Dismissible(
+                                key: Key(user.userId.toString()),
+                                direction: DismissDirection.endToStart,
+                                background: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                    vertical: 8.0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 24),
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
+                                ),
+                                confirmDismiss: (_) async {
+                                  if (user.totalAmount == 0) {
+                                    return await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: const Text('Delete User'),
+                                            content: Text(
+                                              'Are you sure you want to remove ${user.name}?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, false),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, true),
+                                                child: const Text('Delete'),
+                                              ),
+                                            ],
+                                          ),
+                                        ) ??
+                                        false;
+                                  }
+
+                                  // User still has debts
+                                  return await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          icon: const Icon(
+                                            Icons.warning_amber_rounded,
+                                            color: Colors.orange,
+                                            size: 40,
+                                          ),
+                                          title: const Text('Unsettled Debts'),
+                                          content: Text(
+                                            '${user.name} still has an outstanding balance of '
+                                            'ETB ${user.totalAmount.abs().toStringAsFixed(2)}.\n\n'
+                                            'Deleting this user may make it difficult to track these debts later.\n\n'
+                                            'Do you want to delete anyway?',
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, false),
+                                              child: const Text('Keep User'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, true),
+                                              child: const Text(
+                                                'Delete Anyway',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ) ??
+                                      false;
+                                },
+                                onDismissed: (_) async {
+                                  try {
+                                    await Provider.of<HomeProvider>(
+                                      context,
+                                      listen: false,
+                                    ).apiService.deleteUser(user.userId);
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('${user.name} removed'),
+                                      ),
+                                    );
+                                  } catch (e) {}
+                                },
+                                child: HomeUserCard(
+                                  homeUser: user,
+                                  isOwedByMe: true,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                  // "You Owe" Tab (Creditors)
+                  homeProvider.isLoadingCreditors
+                      ? const Center(child: CircularProgressIndicator())
+                      : homeProvider.creditorsError != null
+                      ? Center(
+                          child: Text('Error: ${homeProvider.creditorsError}'),
+                        )
+                      : homeProvider.creditors!.isEmpty
+                      ? const Center(
+                          child: Text('No one you currently owe money to.'),
+                        )
+                      : RefreshIndicator(
+                          // Added RefreshIndicator
+                          onRefresh: _refreshHomeData,
+                          child: ListView.builder(
+                            itemCount: homeProvider.creditors!.length,
+                            itemBuilder: (context, index) {
+                              final user = homeProvider.creditors![index];
+                              return Dismissible(
+                                key: Key(user.userId.toString()),
+                                direction: DismissDirection.endToStart,
+                                background: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                    vertical: 8.0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 24),
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
+                                ),
+                                confirmDismiss: (_) async {
+                                  if (user.totalAmount == 0) {
+                                    return await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: const Text('Delete User'),
+                                            content: Text(
+                                              'Are you sure you want to remove ${user.name}?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, false),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, true),
+                                                child: const Text('Delete'),
+                                              ),
+                                            ],
+                                          ),
+                                        ) ??
+                                        false;
+                                  }
+
+                                  // User still has debts
+                                  return await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          icon: const Icon(
+                                            Icons.warning_amber_rounded,
+                                            color: Colors.orange,
+                                            size: 40,
+                                          ),
+                                          title: const Text('Unsettled Debts'),
+                                          content: Text(
+                                            '${user.name} still has an outstanding balance of '
+                                            'ETB ${user.totalAmount.abs().toStringAsFixed(2)}.\n\n'
+                                            'Deleting this user may make it difficult to track these debts later.\n\n'
+                                            'Do you want to delete anyway?',
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, false),
+                                              child: const Text('Keep User'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, true),
+                                              child: const Text(
+                                                'Delete Anyway',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ) ??
+                                      false;
+                                },
+                                onDismissed: (_) async {
+                                  try {
+                                    await Provider.of<HomeProvider>(
+                                      context,
+                                      listen: false,
+                                    ).apiService.deleteUser(user.userId);
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('${user.name} removed'),
+                                      ),
+                                    );
+                                  } catch (e) {}
+                                },
+                                child: HomeUserCard(
+                                  homeUser: user,
+                                  isOwedByMe: false,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
