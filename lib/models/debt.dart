@@ -21,7 +21,8 @@ class DebtItem {
     required this.isPaid,
   });
 
-  factory DebtItem.fromJson(Map<String, dynamic> json) => _$DebtItemFromJson(json);
+  factory DebtItem.fromJson(Map<String, dynamic> json) =>
+      _$DebtItemFromJson(json);
   Map<String, dynamic> toJson() => _$DebtItemToJson(this);
 }
 
@@ -37,7 +38,8 @@ class Debt {
   final String? overallDescription;
   @JsonKey(name: 'is_verified')
   final bool isVerified;
-  final String status; // 'new', 'pending_acceptance', 'accepted', 'amended_pending_reacceptance', 'rejected'
+  final String
+  status; // 'new', 'pending_acceptance', 'accepted', 'amended_pending_reacceptance', 'rejected'
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
@@ -56,6 +58,9 @@ class Debt {
   final String? borrowerName;
   final List<DebtItem>? items;
 
+  @JsonKey(name: 'asked_to_pay')
+  final bool askedToPay;
+
   Debt({
     required this.id,
     required this.creditorId,
@@ -65,6 +70,7 @@ class Debt {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    required this.askedToPay,
     this.totalAmount,
     this.totalPaid,
     this.outstandingAmount,
@@ -92,6 +98,7 @@ class Debt {
     String? creditorName,
     String? borrowerName,
     List<DebtItem>? items,
+    bool? askedToPay,
   }) {
     return Debt(
       id: id ?? this.id,
@@ -108,6 +115,7 @@ class Debt {
       creditorName: creditorName ?? this.creditorName,
       borrowerName: borrowerName ?? this.borrowerName,
       items: items ?? this.items,
+      askedToPay: askedToPay ?? this.askedToPay,
     );
   }
 }

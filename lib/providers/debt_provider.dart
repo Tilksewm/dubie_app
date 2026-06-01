@@ -16,7 +16,8 @@ class DebtProvider with ChangeNotifier {
   bool _isLoadingDebt = false;
   bool _isLoadingDebtsWithUser = false;
   bool _isLoadingComments = false;
-  bool _isActionInProgress = false; // For actions like adding item, paying, etc.
+  bool _isActionInProgress =
+      false; // For actions like adding item, paying, etc.
 
   String? _debtError;
   String? _debtsWithUserError;
@@ -48,12 +49,12 @@ class DebtProvider with ChangeNotifier {
     _debtsWithUserError = null;
     notifyListeners();
     try {
-      // Call the NEW backend endpoint
       _debtsWithUser = await _apiService.getDebtThreadsWithUser(otherUserId);
     } on ApiException catch (e) {
       _debtsWithUserError = e.message;
     } catch (e) {
-      _debtsWithUserError = 'Failed to load debts another_user_id = $otherUserId: $e';
+      _debtsWithUserError =
+          'Failed to load debts another_user_id = $otherUserId: $e';
     } finally {
       _isLoadingDebtsWithUser = false;
       notifyListeners();
@@ -85,7 +86,9 @@ class DebtProvider with ChangeNotifier {
     notifyListeners();
     try {
       _comments = await _apiService.getCommentsForDebt(debtId);
-      _comments!.sort((a, b) => a.date.compareTo(b.date)); // Sort comments by date
+      _comments!.sort(
+        (a, b) => a.date.compareTo(b.date),
+      ); // Sort comments by date
     } on ApiException catch (e) {
       _commentsError = e.message;
     } catch (e) {
@@ -97,7 +100,8 @@ class DebtProvider with ChangeNotifier {
   }
 
   // --- Actions on Debt ---
-  Future<void> addDebtItem(String debtId, {
+  Future<void> addDebtItem(
+    String debtId, {
     required String description,
     required double price,
     double? paidAmount,
@@ -127,7 +131,11 @@ class DebtProvider with ChangeNotifier {
     }
   }
 
-  Future<void> payDebtItem(String debtId, String itemId, double paidAmount) async {
+  Future<void> payDebtItem(
+    String debtId,
+    String itemId,
+    double paidAmount,
+  ) async {
     _isActionInProgress = true;
     _actionError = null;
     notifyListeners();
@@ -146,7 +154,10 @@ class DebtProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-  Future<void> updateDebtItem(String debtId, String itemId, {
+
+  Future<void> updateDebtItem(
+    String debtId,
+    String itemId, {
     String? description,
     double? price,
     double? paidAmount,
@@ -156,8 +167,13 @@ class DebtProvider with ChangeNotifier {
     _actionError = null;
     notifyListeners();
     try {
-      await _apiService.updateDebtItem(debtId, itemId, description: description, price:price, paidAmount:paidAmount);
-
+      await _apiService.updateDebtItem(
+        debtId,
+        itemId,
+        description: description,
+        price: price,
+        paidAmount: paidAmount,
+      );
     } on ApiException catch (e) {
       _actionError = e.message;
       rethrow;
@@ -170,13 +186,13 @@ class DebtProvider with ChangeNotifier {
     }
     //return debtItem;
   }
+
   Future<void> deleteDebt(String debtId) async {
     _isActionInProgress = true;
     _actionError = null;
     notifyListeners();
     try {
       await _apiService.deleteDebt(debtId);
-
     } on ApiException catch (e) {
       _actionError = e.message;
       rethrow;
@@ -188,13 +204,13 @@ class DebtProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
   Future<void> deleteDebtItem(String debtId, String debtItemId) async {
     _isActionInProgress = true;
     _actionError = null;
     notifyListeners();
     try {
       await _apiService.deleteDebtItem(debtId, debtItemId);
-
     } on ApiException catch (e) {
       _actionError = e.message;
       rethrow;
@@ -206,14 +222,13 @@ class DebtProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-  Future<void> updateDebtDescription(String debtId, String description) async{
 
+  Future<void> updateDebtDescription(String debtId, String description) async {
     _isActionInProgress = true;
     _actionError = null;
     notifyListeners();
     try {
       await _apiService.updateDebtDescription(debtId, description);
-
     } on ApiException catch (e) {
       _actionError = e.message;
       rethrow;
@@ -231,7 +246,10 @@ class DebtProvider with ChangeNotifier {
     _actionError = null;
     notifyListeners();
     try {
-      final newComment = await _apiService.addCommentToDebt(debtId, commentText);
+      final newComment = await _apiService.addCommentToDebt(
+        debtId,
+        commentText,
+      );
       if (_comments != null) {
         _comments!.add(newComment);
       } else {
