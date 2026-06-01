@@ -21,11 +21,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _showCashActions = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     // Fetch initial data when the screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<HomeProvider>(context, listen: false).fetchAllHomeData();
@@ -84,6 +85,15 @@ class _HomeScreenState extends State<HomeScreen>
       symbol: 'ETB ', // Ethiopian Birr, or '$' etc.
       decimalDigits: 2,
     );
+    final double onHand = homeProvider.homeSummary?['on_hand'] ?? 0.0;
+
+    final double lent = homeProvider.homeSummary?['lent'] ?? 0.0;
+
+    final double borrow = homeProvider.homeSummary?['borrow'] ?? 0.0;
+
+    final double receivableImpact = onHand + lent;
+
+    final double netWorth = onHand + lent - borrow;
 
     return Scaffold(
       appBar: AppBar(
@@ -288,6 +298,24 @@ class _HomeScreenState extends State<HomeScreen>
                         ],
                       ),
                     ), // Creditors (users current user owes)
+                    Tab(
+                      child: Column(
+                        children: [
+                          const Text('On Hand', style: TextStyle(fontSize: 14)),
+                          const SizedBox(height: 4),
+                          Text(
+                            currencyFormatter.format(
+                              homeProvider.homeSummary?['on_hand'] ?? 0.0,
+                            ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                   labelColor: Colors.black,
                   unselectedLabelColor: Colors.black87,
@@ -548,24 +576,102 @@ class _HomeScreenState extends State<HomeScreen>
                             },
                           ),
                         ),
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _summaryCard(
+                                title: 'Receivable Impact',
+                                value: receivableImpact,
+                                color: Colors.green,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _summaryCard(
+                                title: 'Net Worth',
+                                value: netWorth,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: homeProvider.cashTransactions.length,
+                          itemBuilder: (context, index) {
+                            return CashTransactionCard(
+                              transaction: homeProvider.cashTransactions[index],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const AddUserScreen()),
-          );
-          if (result == true) {
-            // If a new user was added successfully, refresh the home screen data
-            _refreshHomeData();
-          }
-        },
-        child: const Icon(Icons.person_add),
-      ),
+
+      floatingActionButton: _tabController.index == 2
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (_showCashActions) ...[
+                  FloatingActionButton.small(
+                    heroTag: 'deposit',
+                    onPressed: () {
+                      _showTransactionDialog('deposit');
+                    },
+                    child: const Icon(Icons.arrow_downward),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  FloatingActionButton.small(
+                    heroTag: 'expense',
+                    onPressed: () {
+                      _showTransactionDialog('expense');
+                    },
+                    child: const Icon(Icons.arrow_upward),
+                  ),
+
+                  const SizedBox(height: 12),
+                ],
+
+                FloatingActionButton(
+                  heroTag: 'main',
+                  onPressed: () {
+                    setState(() {
+                      _showCashActions = !_showCashActions;
+                    });
+                  },
+                  child: Icon(_showCashActions ? Icons.close : Icons.add),
+                ),
+              ],
+            )
+          : FloatingActionButton(
+              onPressed: () async {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AddUserScreen(),
+                  ),
+                );
+
+                if (result == true) {
+                  _refreshHomeData();
+                }
+              },
+              child: const Icon(Icons.person_add),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

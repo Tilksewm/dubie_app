@@ -282,6 +282,32 @@ class RemoteApiService {
     return User.fromJson(data);
   }
 
+  Future<List<dynamic>> getCashTransactions() async {
+    final url = Uri.parse('$baseUrl/users/home/cash');
+
+    final response = await _sendRequest(
+      () => _httpClient.get(url, headers: _getHeaders()),
+    );
+
+    return _handleResponse(response);
+  }
+
+  Future<void> addCashTransaction({
+    required String reason,
+    required double amount,
+    required String type,
+  }) async {
+    final url = Uri.parse('$baseUrl/users/home/cash');
+
+    await _sendRequest(
+      () => _httpClient.post(
+        url,
+        headers: _getHeaders(),
+        body: json.encode({'reason': reason, 'amount': amount, 'type': type}),
+      ),
+    );
+  }
+
   // --- Debt Endpoints ---
   Future<List<Debt>> getDebtThreadsWithUser(String otherUserId) async {
     final url = Uri.parse('$baseUrl/debts/threads-with-user/$otherUserId');
