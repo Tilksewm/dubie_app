@@ -8,9 +8,9 @@ class HomeProvider with ChangeNotifier {
 
   Map<String, double>? _homeSummary;
   List<HomeUser>? _creditors; // Users current user owes to
-  List<HomeUser>? _borrowers;// Users who owe current user
+  List<HomeUser>? _borrowers; // Users who owe current user
   Map<String, String>? _userType;
-
+  List<dynamic>? _cashTransactions;
 
   bool _isLoadingSummary = false;
   bool _isLoadingCreditors = false;
@@ -22,18 +22,18 @@ class HomeProvider with ChangeNotifier {
   String? _borrowersError;
   String? _userTypeError;
 
-
   HomeProvider(SharedPreferences prefs) : _apiService = RemoteApiService(prefs);
 
   Map<String, double>? get homeSummary => _homeSummary;
   List<HomeUser>? get creditors => _creditors;
   List<HomeUser>? get borrowers => _borrowers;
   Map<String, String>? get userType => _userType;
+  List<dynamic>? get cashTransactions => _cashTransactions;
 
   bool get isLoadingSummary => _isLoadingSummary;
   bool get isLoadingCreditors => _isLoadingCreditors;
   bool get isLoadingBorrowers => _isLoadingBorrowers;
-  bool get isLoadingUserType =>_isLoadingUserType;
+  bool get isLoadingUserType => _isLoadingUserType;
 
   String? get summaryError => _summaryError;
   String? get creditorsError => _creditorsError;
@@ -53,6 +53,16 @@ class HomeProvider with ChangeNotifier {
       _summaryError = 'Failed to load summary: $e';
     } finally {
       _isLoadingSummary = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> getCashTransactions() async {
+    try {
+      _cashTransactions = await _apiService.getCashTransactions();
+    } catch (e) {
+      print('Failed to load summary: $e');
+    } finally {
       notifyListeners();
     }
   }
@@ -107,10 +117,6 @@ class HomeProvider with ChangeNotifier {
 
   // Call all fetches when needed
   Future<void> fetchAllHomeData() async {
-    await Future.wait([
-      fetchHomeSummary(),
-      fetchCreditors(),
-      fetchBorrowers(),
-    ]);
+    await Future.wait([fetchHomeSummary(), fetchCreditors(), fetchBorrowers()]);
   }
 }

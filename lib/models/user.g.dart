@@ -13,14 +13,12 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
   username: json['username'] as String?,
   phone: json['phone'] as String?,
   userType: json['user_type'] as String,
-  createdAt:
-      json['created_at'] == null
-          ? null
-          : DateTime.parse(json['created_at'] as String),
-  updatedAt:
-      json['updated_at'] == null
-          ? null
-          : DateTime.parse(json['updated_at'] as String),
+  createdAt: json['created_at'] == null
+      ? null
+      : DateTime.parse(json['created_at'] as String),
+  updatedAt: json['updated_at'] == null
+      ? null
+      : DateTime.parse(json['updated_at'] as String),
 );
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
@@ -39,8 +37,9 @@ HomeUser _$HomeUserFromJson(Map<String, dynamic> json) => HomeUser(
   name: json['name'] as String?,
   totalAmount: (json['total_amount'] as num).toDouble(),
   connectionStatus: json['connection_status'] as String,
-  recentItems:
-      (json['recent_items'] as List<dynamic>).map((e) => e as String).toList(),
+  recentItems: (json['recent_items'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
 );
 
 Map<String, dynamic> _$HomeUserToJson(HomeUser instance) => <String, dynamic>{

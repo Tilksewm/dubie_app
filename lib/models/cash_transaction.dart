@@ -11,8 +11,7 @@ class CashTransaction {
     required this.type,
   });
 
-  factory CashTransaction.fromJson(
-      Map<String, dynamic> json) {
+  factory CashTransaction.fromJson(Map<String, dynamic> json) {
     return CashTransaction(
       id: json['id'],
       reason: json['reason'],

@@ -31,15 +31,15 @@ Debt _$DebtFromJson(Map<String, dynamic> json) => Debt(
   status: json['status'] as String,
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: DateTime.parse(json['updated_at'] as String),
+  askedToPay: json['asked_to_pay'] as bool,
   totalAmount: (json['total_amount'] as num?)?.toDouble(),
   totalPaid: (json['total_paid'] as num?)?.toDouble(),
   outstandingAmount: (json['outstanding_amount'] as num?)?.toDouble(),
   creditorName: json['creditor_name'] as String?,
   borrowerName: json['borrower_name'] as String?,
-  items:
-      (json['items'] as List<dynamic>?)
-          ?.map((e) => DebtItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
+  items: (json['items'] as List<dynamic>?)
+      ?.map((e) => DebtItem.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$DebtToJson(Debt instance) => <String, dynamic>{
@@ -57,4 +57,5 @@ Map<String, dynamic> _$DebtToJson(Debt instance) => <String, dynamic>{
   'creditor_name': instance.creditorName,
   'borrower_name': instance.borrowerName,
   'items': instance.items,
+  'asked_to_pay': instance.askedToPay,
 };

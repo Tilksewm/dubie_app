@@ -1,6 +1,7 @@
 import 'package:dubie_app/screens/pin_lock_screen.dart';
 import 'package:dubie_app/screens/profile_edit_screen.dart';
 import 'package:dubie_app/screens/settings_screen.dart';
+import 'package:dubie_app/widgets/cash_transaction_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // For number formatting
@@ -603,10 +604,11 @@ class _HomeScreenState extends State<HomeScreen>
 
                       Expanded(
                         child: ListView.builder(
-                          itemCount: homeProvider.cashTransactions.length,
+                          itemCount: homeProvider.cashTransactions?.length,
                           itemBuilder: (context, index) {
                             return CashTransactionCard(
-                              transaction: homeProvider.cashTransactions[index],
+                              transaction:
+                                  homeProvider.cashTransactions?[index],
                             );
                           },
                         ),
@@ -673,6 +675,48 @@ class _HomeScreenState extends State<HomeScreen>
               child: const Icon(Icons.person_add),
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _summaryCard({
+    required String title,
+    required double value,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              NumberFormat.currency(
+                locale: 'en_US',
+                symbol: 'ETB ',
+                decimalDigits: 2,
+              ).format(value),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
