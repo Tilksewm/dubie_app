@@ -1,47 +1,35 @@
-Future<void> _showTransactionDialog(
-    String type) async {
+import 'package:dubie_app/providers/home_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-  final reasonController =
-      TextEditingController();
+Future<void> showTransactionDialog(String type, BuildContext context) async {
+  final reasonController = TextEditingController();
 
-  final amountController =
-      TextEditingController();
+  final amountController = TextEditingController();
 
   await showDialog(
     context: context,
     builder: (ctx) {
       return AlertDialog(
-        title: Text(
-          type == 'deposit'
-              ? 'Deposit'
-              : 'Withdraw',
-        ),
+        title: Text(type == 'deposit' ? 'Deposit' : 'Withdraw'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: reasonController,
-              decoration:
-                  const InputDecoration(
-                labelText: 'Reason',
-              ),
+              decoration: const InputDecoration(labelText: 'Reason'),
             ),
 
             TextField(
               controller: amountController,
-              keyboardType:
-                  TextInputType.number,
-              decoration:
-                  const InputDecoration(
-                labelText: 'Amount',
-              ),
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Amount'),
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () =>
-                Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
 
@@ -50,11 +38,9 @@ Future<void> _showTransactionDialog(
               await Provider.of<HomeProvider>(
                 context,
                 listen: false,
-              ).addCashTransaction(
-                reason:
-                    reasonController.text,
-                amount: double.parse(
-                    amountController.text),
+              ).apiService.addCashTransaction(
+                reason: reasonController.text,
+                amount: double.parse(amountController.text),
                 type: type,
               );
 

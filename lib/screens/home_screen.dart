@@ -9,8 +9,9 @@ import 'package:intl/intl.dart'; // For number formatting
 import 'package:dubie_app/providers/auth_provider.dart';
 import 'package:dubie_app/providers/home_provider.dart';
 import 'package:dubie_app/models/user.dart';
-import 'package:dubie_app/widgets/home_user_card.dart'; // We will create this
-import 'package:dubie_app/screens/add_user_screen.dart'; // We will create this
+import 'package:dubie_app/widgets/home_user_card.dart';
+import 'package:dubie_app/screens/add_user_screen.dart';
+import 'package:dubie_app/screens/add_cash_transaction_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -631,7 +632,7 @@ class _HomeScreenState extends State<HomeScreen>
                   FloatingActionButton.small(
                     heroTag: 'deposit',
                     onPressed: () {
-                      _showTransactionDialog('deposit');
+                      showTransactionDialog('deposit', context);
                     },
                     child: const Icon(Icons.arrow_downward),
                   ),
@@ -641,7 +642,7 @@ class _HomeScreenState extends State<HomeScreen>
                   FloatingActionButton.small(
                     heroTag: 'expense',
                     onPressed: () {
-                      _showTransactionDialog('expense');
+                      showTransactionDialog('expense', context);
                     },
                     child: const Icon(Icons.arrow_upward),
                   ),
